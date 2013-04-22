@@ -1,0 +1,9 @@
+-DDEBUG
+
+-L.
+-L/usr/local/lib
+-L/usr/local/Cellar/boost/1.51.0/lib
+
+-I./include
+-I/usr/local/include
+-I/usr/local/Cellar/boost/1.51.0/include
