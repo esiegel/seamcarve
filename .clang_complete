@@ -1,5 +1,8 @@
 -DDEBUG
 
+-std=c++11
+-stdlib=libc++
+
 -L.
 -L/usr/local/lib
 -L/usr/local/Cellar/boost/1.51.0/lib
