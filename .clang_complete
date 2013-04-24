@@ -4,6 +4,9 @@
 -L/usr/local/lib
 -L/usr/local/Cellar/boost/1.51.0/lib
 
+-lfreeimageplus
+-lboost_program_options-mt
+
 -I./include
 -I/usr/local/include
 -I/usr/local/Cellar/boost/1.51.0/include

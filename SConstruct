@@ -7,7 +7,7 @@ CPPPATH = ['include',
 LIBPATH = ['/usr/local/lib',
            '/usr/local/Cellar/boost/1.51.0/lib']
 
-LIBS = ['freeimage',
+LIBS = ['freeimageplus',
         'boost_program_options-mt']
 
 env = Environment(LIBS=LIBS,
