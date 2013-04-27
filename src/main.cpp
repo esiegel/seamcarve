@@ -9,12 +9,16 @@
 int main(int argc, char const* argv[]) {
 
    // map to hold cmdline parsing
-   boost::optional<Config> config = create_config(argc, argv);
-   if (!config) {
+   boost::optional<seamcarve::Config> optConfig = 
+      seamcarve::create_config(argc, argv);
+
+   if (!optConfig) {
       return 1;
    }
 
-   do_seam_carving(config.get());
+   seamcarve::Config config = optConfig.get();
+
+   seamcarve::do_seam_carving(config);
 
    return 0;
 }
