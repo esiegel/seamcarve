@@ -2,10 +2,13 @@
 
 CPPPATH = ['include',
            '/usr/local/include',
-           '/usr/local/Cellar/boost/1.51.0/include']
+           '/usr/local/Cellar/boost/1.53.0/include',
+           '/Applications/qt5/5.0.2/clang_64/include/',
+           '/Applications/qt5/5.0.2/clang_64/include/QtWidgets']
 
 LIBPATH = ['/usr/local/lib',
-           '/usr/local/Cellar/boost/1.51.0/lib']
+           '/usr/local/Cellar/boost/1.53.0/lib',
+           '/Applications/qt5/5.0.2/clang_64/libs']
 
 LIBS = ['freeimageplus',
         'boost_program_options-mt']
@@ -15,6 +18,7 @@ LIBS = ['freeimageplus',
 env = Environment(LIBS=LIBS,
                   LIBPATH=LIBPATH,
                   CXX="/usr/bin/clang++",
+                  #CXX="/usr/bin/g++",
                   #CXXFLAGS="-std=c++11 -stdlib=libc++",
                   CPPPATH=CPPPATH)
 

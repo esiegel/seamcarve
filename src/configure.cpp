@@ -1,5 +1,4 @@
 #include <configure.hpp>
-#include <boost/program_options/cmdline.hpp>
 #include <boost/program_options.hpp>
 
 namespace opts = boost::program_options;

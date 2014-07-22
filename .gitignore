@@ -1,4 +1,5 @@
 seamcarve
 build
 .sconsign.dblite
+seamcarve.*
 */**.o
