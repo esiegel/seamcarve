@@ -3,3 +3,4 @@ build
 .sconsign.dblite
 seamcarve.*
 */**.o
+.tup/*

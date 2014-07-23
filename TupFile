@@ -1,0 +1,24 @@
+CXX = /usr/bin/clang++
+
+CPPPATH  = -Iinclude
+CPPPATH += -I/usr/local/include
+CPPPATH += -I/usr/local/Cellar/boost/1.53.0/include
+CPPPATH += -I/usr/local/Cellar/qt5/5.3.1/include/QtWidgets
+
+USE_C11 = -std=c++11
+
+WARN_FLAGS  = -Wall
+WARN_FLAGS += -Wc++11-extensions
+
+LIBPATH  = -L/usr/local/lib
+LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
+LIBPATH += -L/usr/local/Cellar/qt5/5.3.1/lib
+
+LIBS  = -lfreeimageplus
+LIBS += -lboost_program_options-mt
+
+# RULE: compile object files
+: foreach src/*.cpp |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/%B.o
+
+# RULE: seamcarve binary
+: build/*.o |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(LIBPATH) $(LIBS) %f -o %o|> seamcarve
