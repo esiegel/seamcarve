@@ -1,9 +1,10 @@
 #include <configure.hpp>
 #include <boost/program_options.hpp>
 
-namespace opts = boost::program_options;
 
 namespace seamcarve  {
+
+   namespace opts = boost::program_options;
 
    opts::options_description create_parse_format() {
       std::string msg = "Interactive Seam Carving for resizing images";
@@ -27,26 +28,24 @@ namespace seamcarve  {
       return vmap;
    }
 
-}
+   boost::optional<Config> create_config(int argc, char const* argv[]) {
 
-boost::optional<seamcarve::Config> seamcarve::create_config(int argc,
-                                                            char const* argv[]) {
+      opts::variables_map vmap = parse_cmd_args(argc, argv);
 
-   opts::variables_map vmap = parse_cmd_args(argc, argv);
+      if (vmap.count("help")) {
+         std::cout << create_parse_format() << std::endl;
+         return boost::optional<Config>();
+      }
 
-   if (vmap.count("help")) {
-      std::cout << create_parse_format() << std::endl;
-      return boost::optional<Config>();
+      if (!vmap.count("image_path")) {
+         std::cout << create_parse_format() << std::endl;
+         std::cout << "MISSING image_path" << std::endl;
+         return boost::optional<Config>();
+      }
+
+      Config config;
+      config.image_path = vmap["image_path"].as<std::string>();
+
+      return boost::optional<Config>(config);
    }
-
-   if (!vmap.count("image_path")) {
-      std::cout << create_parse_format() << std::endl;
-      std::cout << "MISSING image_path" << std::endl;
-      return boost::optional<Config>();
-   }
-
-   Config config;
-   config.image_path = vmap["image_path"].as<std::string>();
-
-   return boost::optional<Config>(config);
 }

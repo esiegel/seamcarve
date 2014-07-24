@@ -6,7 +6,7 @@
 -L.
 -L/usr/local/lib
 -L/usr/local/Cellar/boost/1.53.0/lib
--L/Applications/qt5/5.0.2/clang_64/libs
+-L/usr/local/Cellar/qt5/5.3.1/lib
 
 -lfreeimageplus
 -lboost_program_options-mt
@@ -14,5 +14,5 @@
 -I./include
 -I/usr/local/include
 -I/usr/local/Cellar/boost/1.53.0/include
--I /Applications/qt5/5.0.2/clang_64/include/
--I /Applications/qt5/5.0.2/clang_64/include/QtWidgets
+-I/usr/local/Cellar/qt5/5.3.1/include
+-I/usr/local/Cellar/qt5/5.3.1/include/QtWidgets

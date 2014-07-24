@@ -1,9 +1,12 @@
 CXX = /usr/bin/clang++
 
+QT5_HOME = /usr/local/Cellar/qt5/5.3.1
+
 CPPPATH  = -Iinclude
 CPPPATH += -I/usr/local/include
 CPPPATH += -I/usr/local/Cellar/boost/1.53.0/include
-CPPPATH += -I/usr/local/Cellar/qt5/5.3.1/include/QtWidgets
+CPPPATH += -I$(QT5_HOME)/include
+CPPPATH += -Ibuild/generated
 
 USE_C11 = -std=c++11
 
@@ -12,13 +15,16 @@ WARN_FLAGS += -Wc++11-extensions
 
 LIBPATH  = -L/usr/local/lib
 LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
-LIBPATH += -L/usr/local/Cellar/qt5/5.3.1/lib
+LIBPATH += -L$(QT5_HOME)/lib
 
 LIBS  = -lfreeimageplus
 LIBS += -lboost_program_options-mt
 
+# RULE: QT5 ui compilation 
+: resources/seamcarveui.ui |> $(QT5_HOME)/bin/uic -o %o %f |> build/generated/%B.hpp
+
 # RULE: compile object files
-: foreach src/*.cpp |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/%B.o
+: foreach src/*.cpp | build/generated/* |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/%B.o
 
 # RULE: seamcarve binary
 : build/*.o |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(LIBPATH) $(LIBS) %f -o %o|> seamcarve

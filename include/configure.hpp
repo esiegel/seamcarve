@@ -1,7 +1,6 @@
 #ifndef CONFIGURE_HPP
 #define CONFIGURE_HPP
 
-#include <iostream>
 #include <boost/optional.hpp>
 
 namespace seamcarve {
@@ -9,7 +8,7 @@ namespace seamcarve {
    /**
     * Configuration Container
     */
-   typedef struct _Config {
+   typedef struct {
       std::string image_path;
    } Config;
       

@@ -5,20 +5,23 @@
 #include <configure.hpp>
 #include <seamcarve.hpp>
 
+// Generated UI.  See resources dir.
+#include <seamcarveui.hpp>
+
 
 int main(int argc, char const* argv[]) {
+   using namespace seamcarve;
 
    // map to hold cmdline parsing
-   boost::optional<seamcarve::Config> optConfig = 
-      seamcarve::create_config(argc, argv);
+   boost::optional<Config> optConfig = create_config(argc, argv);
 
    if (!optConfig) {
       return 1;
    }
 
-   seamcarve::Config config = optConfig.get();
+   Config config = optConfig.get();
 
-   seamcarve::do_seam_carving(config);
+   do_seam_carving(config);
 
    return 0;
 }

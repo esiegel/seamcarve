@@ -2,7 +2,6 @@
 #define SEAMCARVE_HPP
 
 #include <configure.hpp>
-#include <iostream>
 
 namespace seamcarve {
 
