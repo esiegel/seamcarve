@@ -23,5 +23,11 @@ int main(int argc, char const* argv[]) {
 
    do_seam_carving(config);
 
-   return 0;
+   QApplication app(argc, (char**) argv);
+   QDialog* dialog= new QDialog;
+   Ui::SeamcarveUI ui;
+   ui.setupUi(dialog);
+
+   dialog->show();
+   return app.exec();
 }

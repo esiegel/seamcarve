@@ -15,10 +15,15 @@ WARN_FLAGS += -Wc++11-extensions
 
 LIBPATH  = -L/usr/local/lib
 LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
-LIBPATH += -L$(QT5_HOME)/lib
+
+FRAMEWORK_PATH = -F$(QT5_HOME)/lib
 
 LIBS  = -lfreeimageplus
 LIBS += -lboost_program_options-mt
+
+FRAMEWORKS += -framework QtCore
+FRAMEWORKS += -framework QtDeclarative
+FRAMEWORKS += -framework QtWidgets
 
 # RULE: QT5 ui compilation 
 : resources/seamcarveui.ui |> $(QT5_HOME)/bin/uic -o %o %f |> build/generated/%B.hpp
@@ -27,4 +32,4 @@ LIBS += -lboost_program_options-mt
 : foreach src/*.cpp | build/generated/* |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/%B.o
 
 # RULE: seamcarve binary
-: build/*.o |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(LIBPATH) $(LIBS) %f -o %o|> seamcarve
+: build/*.o |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> seamcarve
