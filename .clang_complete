@@ -12,6 +12,7 @@
 -lboost_program_options-mt
 
 -I./include
+-I./build/generated
 -I/usr/local/include
 -I/usr/local/Cellar/boost/1.53.0/include
 -I/usr/local/Cellar/qt5/5.3.1/include

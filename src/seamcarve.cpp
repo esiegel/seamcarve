@@ -1,4 +1,5 @@
-#include <seamcarve.hpp>
+#include "seamcarve.hpp"
+
 #include <iostream>
 #include <boost/format.hpp>
 

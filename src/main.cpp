@@ -1,13 +1,20 @@
+#include "configure.hpp"
+#include "seamcarve.hpp"
+#include "seamcarveui.hpp" // Generated UI.
+
 #include <iostream>
 #include <string>
 #include <FreeImagePlus.h>
 
-#include <configure.hpp>
-#include <seamcarve.hpp>
 
-// Generated UI.  See resources dir.
-#include <seamcarveui.hpp>
 
+QMainWindow* create_window() {
+   QMainWindow* window = new QMainWindow;
+   Ui::MainWindow* ui = new Ui::MainWindow;
+   ui->setupUi(window);
+
+   return window;
+}
 
 int main(int argc, char const* argv[]) {
    using namespace seamcarve;
@@ -21,13 +28,11 @@ int main(int argc, char const* argv[]) {
 
    Config config = optConfig.get();
 
+   QApplication app(argc, (char**) argv);
+   QMainWindow* window = create_window();
+   window->show();
+
    do_seam_carving(config);
 
-   QApplication app(argc, (char**) argv);
-   QDialog* dialog= new QDialog;
-   Ui::SeamcarveUI ui;
-   ui.setupUi(dialog);
-
-   dialog->show();
    return app.exec();
 }

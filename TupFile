@@ -1,3 +1,5 @@
+########################### DEFINITIONS ###########################
+
 CXX = /usr/bin/clang++
 
 QT5_HOME = /usr/local/Cellar/qt5/5.3.1
@@ -16,20 +18,25 @@ WARN_FLAGS += -Wc++11-extensions
 LIBPATH  = -L/usr/local/lib
 LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
 
-FRAMEWORK_PATH = -F$(QT5_HOME)/lib
-
 LIBS  = -lfreeimageplus
 LIBS += -lboost_program_options-mt
 
-FRAMEWORKS += -framework QtCore
+FRAMEWORK_PATH = -F$(QT5_HOME)/lib
+
+FRAMEWORKS  = -framework QtCore
 FRAMEWORKS += -framework QtDeclarative
 FRAMEWORKS += -framework QtWidgets
 
-# RULE: QT5 ui compilation 
-: resources/seamcarveui.ui |> $(QT5_HOME)/bin/uic -o %o %f |> build/generated/%B.hpp
+########################### RULES ###########################
 
-# RULE: compile object files
-: foreach src/*.cpp | build/generated/* |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/%B.o
+# QT5 ui compilation 
+: resources/seamcarveui.ui |> $(QT5_HOME)/bin/uic -o %o %f |> build/generated/%B.hpp {gen_headers}
 
-# RULE: seamcarve binary
-: build/*.o |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> seamcarve
+# QT5 generated ui to actual header.  Q_Object, slots, and signals.
+: foreach include/ui/*.hpp |> $(QT5_HOME)/bin/moc -o %o %f |> build/generated/ui/%B.hpp_moc {gen_headers}
+
+# Compile object files
+: foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/objects/%B.o {objects}
+
+# Seamcarve binary
+: {objects} |> $(CXX) -v $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
