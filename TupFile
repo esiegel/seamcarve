@@ -25,6 +25,7 @@ FRAMEWORK_PATH = -F$(QT5_HOME)/lib
 
 FRAMEWORKS  = -framework QtCore
 FRAMEWORKS += -framework QtDeclarative
+FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
 ########################### RULES ###########################

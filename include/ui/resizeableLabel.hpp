@@ -13,6 +13,9 @@ namespace ui {
    public:
       using QLabel::QLabel;
 
+      void resizeEvent(QResizeEvent* event) override;
+      bool eventFilter(QObject *object, QEvent *event) override;
+
    public slots:
       void windowResized();
    };
