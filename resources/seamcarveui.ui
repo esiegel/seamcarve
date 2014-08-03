@@ -66,6 +66,9 @@
    <class>seamcarve::ui::ResizeableLabel</class>
    <extends>QLabel</extends>
    <header>ui/resizeableLabel.hpp_moc</header>
+   <slots>
+    <slot>openImage()</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -86,8 +89,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>label</receiver>
+   <slot>openImage()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>326</x>
+     <y>280</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>displayAboutMessageBox()</slot>
+  <slot>openImage()</slot>
  </slots>
 </ui>

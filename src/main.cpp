@@ -1,5 +1,6 @@
 #include "configure.hpp"
 #include "seamcarve.hpp"
+#include "ui/mainWindow.hpp_moc"
 #include "seamcarveui.hpp" // Generated UI.
 
 #include <iostream>
@@ -7,9 +8,8 @@
 #include <FreeImagePlus.h>
 
 
-
 QMainWindow* create_window() {
-   QMainWindow* window = new QMainWindow;
+   auto window = new seamcarve::ui::MainWindow;
    Ui::MainWindow* ui = new Ui::MainWindow;
    ui->setupUi(window);
 

@@ -1,13 +1,11 @@
 #include "ui/resizeableLabel.hpp"
 
 #include <QtGui/QResizeEvent>
+#include <QtWidgets/QFileDialog>
 #include <iostream>
 
-typedef seamcarve::ui::ResizeableLabel RL;
 
-void RL::windowResized() {
-   std::cout << "WHAT UP HOMIE" << std::endl;
-}
+typedef seamcarve::ui::ResizeableLabel RL;
 
 void RL::resizeEvent(QResizeEvent* event) {
    QSize oldSize = event->oldSize();
@@ -22,4 +20,13 @@ void RL::resizeEvent(QResizeEvent* event) {
 bool RL::eventFilter(QObject *object, QEvent *event) {
    std::cout << "GETTING EVENT" << std::endl;
    return true;
+}
+
+void RL::openImage() {
+   QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                   QDir::homePath(),
+                                                   tr("Images (*.png *.xpm *.jpg)"));
+   std::cout << "OPENING IMAGE " << fileName.toStdString() << std::endl;
+   const QPixmap pixmap(fileName); 
+   this->setPixmap(pixmap);
 }

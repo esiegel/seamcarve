@@ -1,15 +1,15 @@
-#ifndef CENTRALWIDGET
-#define CENTRALWIDGET
+#ifndef MAINWINDOW
+#define MAINWINDOW
 
 #include <QtCore/QObject>
-#include <QtWidgets/QWidget>
+#include <QtWidgets/QMainWindow>
+
 
 namespace seamcarve {
 namespace ui {
 
-   class CentralWidget: public QWidget {
+   class MainWindow : public QMainWindow {
       Q_OBJECT
-
 
       public slots:
          void displayAboutMessageBox();

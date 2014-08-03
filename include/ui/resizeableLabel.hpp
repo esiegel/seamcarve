@@ -4,6 +4,7 @@
 #include <QtCore/QObject>
 #include <QtWidgets/QLabel>
 
+
 namespace seamcarve {
 namespace ui {
 
@@ -17,7 +18,7 @@ namespace ui {
       bool eventFilter(QObject *object, QEvent *event) override;
 
    public slots:
-      void windowResized();
+      void openImage();
    };
 
 }
