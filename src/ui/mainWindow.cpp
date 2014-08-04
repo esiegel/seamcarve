@@ -1,4 +1,4 @@
-#include "ui/mainWindow.hpp"
+#include "ui/mainWindow.moc"
 
 #include <iostream>
 

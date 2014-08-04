@@ -65,7 +65,8 @@
   <customwidget>
    <class>seamcarve::ui::ResizeableLabel</class>
    <extends>QLabel</extends>
-   <header>ui/resizeableLabel.hpp_moc</header>
+   <!--<header>ui/resizeableLabel.moc</header>-->
+   <header>ui/resizeableLabel.hpp</header>
    <slots>
     <slot>openImage()</slot>
    </slots>

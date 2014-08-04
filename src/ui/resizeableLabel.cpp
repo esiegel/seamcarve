@@ -1,4 +1,4 @@
-#include "ui/resizeableLabel.hpp"
+#include "ui/resizeableLabel.moc"
 
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QFileDialog>

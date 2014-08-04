@@ -1,6 +1,6 @@
 #include "seamcarve.hpp"
 #include "seamcarveui.hpp" // Generated UI.
-#include "ui/mainWindow.hpp_moc"
+#include "ui/mainWindow.hpp"
 
 #include <iostream>
 #include <string>

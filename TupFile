@@ -31,7 +31,7 @@ FRAMEWORKS += -framework QtWidgets
 : resources/seamcarveui.ui |> $(QT5_HOME)/bin/uic -o %o %f |> build/generated/%B.hpp {gen_headers}
 
 # QT5 generated ui to actual header.  Q_Object, slots, and signals.
-: foreach include/ui/*.hpp |> $(QT5_HOME)/bin/moc -o %o %f |> build/generated/ui/%B.hpp_moc {gen_headers}
+: foreach include/ui/*.hpp |> $(QT5_HOME)/bin/moc -o %o %f |> build/generated/ui/%B.moc {gen_headers}
 
 # Compile object files
 : foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/objects/%B.o {objects}
