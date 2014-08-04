@@ -6,7 +6,6 @@ QT5_HOME = /usr/local/Cellar/qt5/5.3.1
 
 CPPPATH  = -Iinclude
 CPPPATH += -I/usr/local/include
-CPPPATH += -I/usr/local/Cellar/boost/1.53.0/include
 CPPPATH += -I$(QT5_HOME)/include
 CPPPATH += -Ibuild/generated
 
@@ -16,10 +15,8 @@ WARN_FLAGS  = -Wall
 WARN_FLAGS += -Wc++11-extensions
 
 LIBPATH  = -L/usr/local/lib
-LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
 
-LIBS  = -lfreeimageplus
-LIBS += -lboost_program_options-mt
+LIBS  = ""
 
 FRAMEWORK_PATH = -F$(QT5_HOME)/lib
 

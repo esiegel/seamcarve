@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW
-#define MAINWINDOW
+#ifndef MAIN_WINDOW_HPP
+#define MAIN_WINDOW_HPP
 
 #include <QtCore/QObject>
 #include <QtWidgets/QMainWindow>

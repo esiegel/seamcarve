@@ -1,5 +1,5 @@
-#ifndef RESIZEABLELABEL 
-#define RESIZEABLELABEL
+#ifndef RESIZEABLE_LABEL_HPP 
+#define RESIZEABLE_LABEL_HPP
 
 #include <QtCore/QObject>
 #include <QtWidgets/QLabel>
