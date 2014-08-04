@@ -1,7 +1,14 @@
 #include "seamcarve.hpp"
 
 #include <iostream>
+using std::cout;
+using std::endl;
 
-void seamcarve::do_seam_carving() {
-   std::cout << "DO SEEM CARVING" << std::endl;
+
+namespace seamcarve {
+
+   void do_seam_carving() {
+      cout << "DO SEEM CARVING" << endl;
+   }
+
 }

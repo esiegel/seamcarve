@@ -1,10 +1,16 @@
 #include "ui/mainWindow.moc"
 
 #include <iostream>
+using std::cout;
+using std::endl;
 
 
-typedef seamcarve::ui::MainWindow MW;
+namespace seamcarve {
+namespace ui {
 
-void MW::displayAboutMessageBox() {
-   std::cout << "ABOUT BUTTON CLICKED" << std::endl;
+   void MainWindow::displayAboutMessageBox() {
+      cout << "ABOUT BUTTON CLICKED" << endl;
+   }
+
+}
 }
