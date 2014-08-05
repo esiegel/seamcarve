@@ -2,6 +2,7 @@
 #define RESIZEABLE_LABEL_HPP
 
 #include <QtCore/QObject>
+#include <QtCore/QSize>
 #include <QtWidgets/QLabel>
 
 
@@ -15,7 +16,9 @@ namespace ui {
       using QLabel::QLabel;
 
       void resizeEvent(QResizeEvent* event) override;
-      bool eventFilter(QObject *object, QEvent *event) override;
+
+   signals:
+      void signalImageOpened(QSize size);
 
    public slots:
       void openImage();

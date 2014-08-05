@@ -2,6 +2,7 @@
 #define MAIN_WINDOW_HPP
 
 #include <QtCore/QObject>
+#include <QtCore/QSize>
 #include <QtWidgets/QMainWindow>
 
 
@@ -13,6 +14,7 @@ namespace ui {
 
       public slots:
          void displayAboutMessageBox();
+         void imageOpened(QSize size);
    };
 
 }

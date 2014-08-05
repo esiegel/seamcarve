@@ -5,10 +5,12 @@ using std::cout;
 using std::endl;
 
 
+
 namespace seamcarve {
 
-   void do_seam_carving() {
+   QImage do_seam_carving(QImage image, QSize old_size, QSize size) {
       cout << "DO SEEM CARVING" << endl;
+      return QImage();
    }
 
 }
