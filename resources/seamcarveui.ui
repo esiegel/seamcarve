@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <widget class="seamcarve::ui::ResizeableLabel" name="label">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
@@ -25,6 +25,19 @@
       </property>
       <property name="text">
        <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QCheckBox" name="checkBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Energy View</string>
       </property>
      </widget>
     </item>
@@ -76,6 +89,7 @@
     <signal>signalImageOpened(QSize)</signal>
     <slot>openImage()</slot>
     <slot>openImageFromFilename(QString)</slot>
+    <slot>energyCheckboxClicked(bool)</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -142,6 +156,22 @@
     <hint type="destinationlabel">
      <x>326</x>
      <y>280</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>label</receiver>
+   <slot>energyCheckboxClicked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>330</x>
+     <y>520</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>326</x>
+     <y>268</y>
     </hint>
    </hints>
   </connection>

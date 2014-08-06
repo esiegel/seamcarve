@@ -22,8 +22,13 @@ namespace ui {
       void signalImageOpened(QSize size);
 
    public slots:
+      void energyCheckboxClicked(bool checked);
       void openImage();
       void openImageFromFilename(QString filename);
+
+   private:
+      QPixmap imagePixmap;
+      QPixmap energyPixmap;
    };
 
 }

@@ -48,6 +48,16 @@ namespace ui {
       QLabel::resizeEvent(event);
    }
 
+
+   /**********************SLOTS***********************/
+
+   void ResizeableLabel::energyCheckboxClicked(bool checked) {
+      cout << "ENERGY " << (checked ? "ON" : "OFF") << endl;
+      if (!imagePixmap.isNull()) {
+         setPixmap(checked ? energyPixmap : imagePixmap);
+      }
+   }
+
    void ResizeableLabel::openImage() {
       QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                       QDir::homePath(),
@@ -58,12 +68,19 @@ namespace ui {
    }
 
    void ResizeableLabel::openImageFromFilename(QString filename) {
-      const QPixmap pixmap(filename);
-      setPixmap(pixmap);
+      imagePixmap = QPixmap(filename);
+
+      QImage energy_image = calculate_image_energy(imagePixmap.toImage());
+      energyPixmap = QPixmap::fromImage(energy_image);
 
       // signal new image 
-      emit signalImageOpened(pixmap.size());
+      setPixmap(imagePixmap);
+
+      // signal new image 
+      emit signalImageOpened(imagePixmap.size());
    }
+
+   /**********************PRIVATE***********************/
 
 }
 }
