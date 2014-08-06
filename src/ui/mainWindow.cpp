@@ -15,7 +15,10 @@ namespace ui {
 
    void MainWindow::imageOpened(QSize size) {
       cout << "Fit window to image size" << endl;
-      resize(size);
+
+      int margin = 25;
+      QSize new_size(size.width() + margin, size.height() + margin);
+      resize(new_size);
    }
 
 }
