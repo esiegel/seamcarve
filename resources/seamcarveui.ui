@@ -75,6 +75,7 @@
    <slots>
     <signal>signalImageOpened(QSize)</signal>
     <slot>openImage()</slot>
+    <slot>openImageFromFilename(QString)</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -128,8 +129,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>MainWindow</sender>
+   <signal>signalImageFromCmdline(QString)</signal>
+   <receiver>label</receiver>
+   <slot>openImageFromFilename(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>326</x>
+     <y>269</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>326</x>
+     <y>280</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
+  <signal>signalImageFromCmdline(QString)</signal>
   <slot>displayAboutMessageBox()</slot>
   <slot>imageOpened(QSize)</slot>
  </slots>

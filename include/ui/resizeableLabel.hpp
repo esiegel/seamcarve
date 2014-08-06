@@ -3,6 +3,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QSize>
+#include <QtCore/QString>
 #include <QtWidgets/QLabel>
 
 
@@ -22,6 +23,7 @@ namespace ui {
 
    public slots:
       void openImage();
+      void openImageFromFilename(QString filename);
    };
 
 }
