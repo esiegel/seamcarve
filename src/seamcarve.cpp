@@ -1,17 +1,35 @@
 #include "seamcarve.hpp"
 
 #include <algorithm>
+#include <deque>
 #include <iostream>
 using std::max_element;
 using std::min_element;
 using std::min;
 using std::pair;
+using std::deque;
 using std::vector;
 
 
 namespace seamcarve {
 
-   /**********************PRIVATE***********************/
+   /**********************DECLARATIONS***********************/
+
+   QImage remove_columns(const QImage image, int num);
+
+   void calculate_energy_diff_by_col(int width,
+                                         int height,
+                                         float* energies,
+                                         float* energy_diffs,
+                                         int* prev_pixels);
+
+   void find_seam_by_col(int width,
+                         int height,
+                         deque<int>& seam_pixels,
+                         float* energy_diffs,
+                         int* prev_pixels);
+
+   QImage remove_row(const QImage image);
 
    float* calculate_energy(const QImage image);
 
@@ -24,11 +42,8 @@ namespace seamcarve {
                                    float min_energy,
                                    float max_energy);
 
-   QImage remove_column(const QImage image);
-
-   QImage remove_row(const QImage image);
-
-   QImage remove_seam(const QImage image, int seam[], bool column);
+   template <typename T, typename S>
+   void copy_and_prune_data(T* old_data, T* data, int old_data_size, S& indexes);
 
    void image_cleanup_handler(void *data);
 
@@ -41,16 +56,11 @@ namespace seamcarve {
     * this ordering is mathematically calculated.
     */
    QImage resize(const QImage image, QSize size) {
-      QImage result   = image;
-      int width_diff  = size.width() - image.width();
-      int height_diff = size.height() - image.height();
+      QImage result = image;
+      int width_diff = size.width() - image.width();
 
-      for (int i = height_diff; i < 0; i++) {
-         result = remove_row(result);
-      }
-
-      for (int i = width_diff; i < 0; i++) {
-         result = remove_column(result);
+      if (width_diff < 0) {
+         result = remove_columns(result, -width_diff);
       }
 
       return result;
@@ -89,17 +99,77 @@ namespace seamcarve {
 
    /**********************PRIVATE***********************/
 
-   QImage remove_column(const QImage image) {
-      int width       = image.width();
-      int height      = image.height();
-      int num_pixels  = width * height;
-      float* energies = calculate_energy(image);
+   /*
+    * Calculate a new image by removing least energetic pixel seams.
+    *
+    * Flow
+    *   Img -> Eng -> Eng_diff -> Seam
+    *   Img + Seam -> Img_small
+    *
+    * Calculating the energy of all pixels is the bottleneck so we reuse 
+    * previously calculated energies as follows:
+    *
+    * Flow
+    *   Eng + Seam -> Eng_small -> Eng_diff_small -> Seam_small
+    */
+   QImage remove_columns(const QImage image, int num) {
+      int width = image.width();
+      int height = image.height();
+      int num_pixels = width * height;
+      float* energies = calculate_energy(image); // Per pixel energy
+      float energy_diffs[num_pixels];            // tracks diffs in energy between pixel.
+      int prev_pixels[num_pixels];               // NxM pixels that point to prev with min energy.
+      deque<int> seam_pixels;                    // N pixels that are to remove
 
-      int prev_pixels[width * height]; // NxM pairs that point to prev row with min energy
-      int seam_pixels[height];         // N pairs that are the pixels to remove
+      QRgb* image_data = NULL;
+      for (int i = 0; i < num; i++) {
+         // calculate energies from previous energies.
+         if (i > 0) {
+            int num_pixels_pruned = num_pixels - height;
+            float* energies_pruned = new float[num_pixels_pruned];
+            copy_and_prune_data(energies, energies_pruned, num_pixels, seam_pixels);
+            num_pixels = num_pixels_pruned;
 
-      // used to track differences in energies between row to row.
-      float energy_diffs[num_pixels];
+            seam_pixels.clear();
+            delete energies;
+
+            energies = energies_pruned;
+         }
+
+         // calculates energy_diffs and tracks prev min pixels as well.
+         // would prefer to separate the prev_pixel calculation, but it
+         // saves much work to calculate together.
+         calculate_energy_diff_by_col(width - i, height, energies, energy_diffs, prev_pixels);
+
+         // traverse the grid of prev_pixels and find the seam.
+         find_seam_by_col(width - i, height, seam_pixels, energy_diffs, prev_pixels);
+
+         // remove old pixel values specified in the seam.
+         bool get_old_image_data_from_original = image_data == NULL;
+         QRgb* old_image_data = (get_old_image_data_from_original) 
+                                ? (QRgb*) image.bits()
+                                : image_data;
+
+         image_data = new QRgb[num_pixels - height];
+
+         copy_and_prune_data(old_image_data, image_data, num_pixels, seam_pixels);
+
+         if (get_old_image_data_from_original) {
+            delete old_image_data;
+         }
+      }
+
+      // free memory
+      delete energies;
+
+      return QImage((uchar*) image_data, width - num, height, image.format());
+   }
+
+   void calculate_energy_diff_by_col(int width,
+                                         int height,
+                                         float* energies,
+                                         float* energy_diffs,
+                                         int* prev_pixels) {
 
       // set first row of energy diffs to be just the energy of that row.
       for (int i = 0; i < width; i++) {
@@ -129,22 +199,21 @@ namespace seamcarve {
             energy_diffs[pixel] = energies[pixel] + min_energy;
          }
       }
+   }
 
+   /*
+    * Walks the NxM energy_diff grid to find the already calculated seam.
+    */
+   void find_seam_by_col(int width, int height, deque<int>& seam_pixels, float* energy_diffs, int* prev_pixels) {
       // working from the last row down to the first find the seam of min values.
       float* min_diff = min_element(energy_diffs + (height - 1) * width,
                                     energy_diffs + height * width);
-      int min_pixel = min_diff - energy_diffs;
-
       // set seam pixels
+      int min_pixel = min_diff - energy_diffs;
       for (int row = height - 1; row >= 0; row--) {
-         seam_pixels[row] = min_pixel;
+         seam_pixels.push_front(min_pixel);
          min_pixel = prev_pixels[min_pixel];
       }
-
-      // free memory
-      delete energies;
-
-      return remove_seam(image, seam_pixels, true);
    }
 
    /*
@@ -152,37 +221,6 @@ namespace seamcarve {
     */
    QImage remove_row(const QImage image) {
       return image;
-   }
-
-   /*
-    * Copies and manipulates the underlying image data to create
-    * a new image.  Assumes that the size of seam is the height/width
-    * of the image and that it is sorted from lowest to highest pixel.
-    */
-   QImage remove_seam(const QImage image, int seam[], bool column) {
-      // calculate new size of image
-      QSize old_size = image.size();
-      int seam_size  = column ? old_size.height() : old_size.width();
-      int width      = old_size.width() - (column ? 1 : 0);
-      int height     = old_size.height() - (column ? 0 : 1);
-      int num_pixels = width * height;
-
-      // src and dst image data.
-      QRgb* old_data = (QRgb*) image.bits();
-      QRgb* data     = new QRgb[num_pixels]; // TODO how does this memory get freed?
-
-      int prev_pixel = 0;
-      for (int i = 0; i < seam_size; i++) {
-         int seam_pixel = seam[i];
-         int amount = seam_pixel - prev_pixel;
-
-         memcpy(data + prev_pixel - i, old_data + prev_pixel, amount* sizeof(QRgb)); 
-
-         prev_pixel = seam_pixel;
-      }
-
-      // new image, also need to pass a cleanup function and a pnt to data.
-      return QImage((uchar*)data, width, height, image.format(), image_cleanup_handler, data);
    }
 
    /*
@@ -272,6 +310,27 @@ namespace seamcarve {
       }
 
       return colors;
+   }
+
+   /*
+    * Copies old_data to data, but ignores values at index offets.
+    * Assumes that the indexes are sorted.
+    */
+   template <typename T, typename S>
+   void copy_and_prune_data(T* old_data, T* data, int old_data_size, S& indexes) {
+      int prev_index = 0;
+      for (int i = 0; i < indexes.size(); i++) {
+         int index = indexes[i];
+         int amount = index - prev_index;
+
+         memcpy(data + prev_index - i, old_data + prev_index, amount * sizeof(T)); 
+
+         prev_index = index;
+      }
+
+      // copy last chunk
+      memcpy(data + prev_index - indexes.size(), old_data + prev_index,
+            (old_data_size - prev_index) * sizeof(T)); 
    }
 
    // deletes memory buffer from QImages
