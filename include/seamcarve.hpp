@@ -7,8 +7,8 @@
 
 namespace seamcarve {
 
-   QImage do_seam_carving(QImage image, QSize old_size, QSize size);
-   QImage calculate_image_energy(QImage image);
+   QImage resize(QImage image, QSize size);
+   QImage calculate_energy_image(QImage image);
 }
 
 #endif

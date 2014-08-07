@@ -28,21 +28,10 @@ namespace ui {
            << " PIXMAP:" << pixmap()->size().width() << "x" << pixmap()->size().height() << endl;
 
 
-      //DELETE PIXELS
-      if (size.height() < oldSize.height()) {
-         QImage image = pixmap()->toImage();
-
-         int num_pixels = size.height() * image.width();
-         QRgb* data = new QRgb[num_pixels];
-
-         // copy old data
-         memcpy(data, image.bits(), num_pixels * sizeof(QRgb)); 
-
-         // new image
-         QImage nextImage = QImage((uchar*)data, image.width(), size.height(), image.format());
-
-         setPixmap(QPixmap::fromImage(nextImage));
-      }
+      // resize using seamcarving
+      QImage next_image = seamcarve::resize(pixmap()->toImage(), size);
+      imagePixmap = QPixmap::fromImage(next_image);
+      setPixmap(imagePixmap);
 
       // send event to standard event handler.
       QLabel::resizeEvent(event);
@@ -70,7 +59,7 @@ namespace ui {
    void ResizeableLabel::openImageFromFilename(QString filename) {
       imagePixmap = QPixmap(filename);
 
-      QImage energy_image = calculate_image_energy(imagePixmap.toImage());
+      QImage energy_image = calculate_energy_image(imagePixmap.toImage());
       energyPixmap = QPixmap::fromImage(energy_image);
 
       // signal new image 
