@@ -7,8 +7,8 @@
 
 namespace seamcarve {
 
-   QImage resize(QImage image, QSize size);
-   QImage calculate_energy_image(QImage image);
+   QImage resize(const QImage image, QSize size);
+   QImage calculate_energy_image(const QImage image);
 }
 
 #endif

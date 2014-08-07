@@ -9,14 +9,13 @@ using std::pair;
 using std::vector;
 
 
-
 namespace seamcarve {
 
    /**********************PRIVATE***********************/
 
-   float* calculate_energy(QImage image);
+   float* calculate_energy(const QImage image);
 
-   float calculate_pixel_energy(int x, int y, QImage image);
+   float calculate_pixel_energy(const QImage image, int x, int y);
 
    QColor* calculate_energy_colors(float* energies,
                                    int num_pixels,
@@ -25,11 +24,11 @@ namespace seamcarve {
                                    float min_energy,
                                    float max_energy);
 
-   QImage remove_column(QImage image);
+   QImage remove_column(const QImage image);
 
-   QImage remove_row(QImage image);
+   QImage remove_row(const QImage image);
 
-   QImage remove_seam(QImage image, int seam[], bool column);
+   QImage remove_seam(const QImage image, int seam[], bool column);
 
    void image_cleanup_handler(void *data);
 
@@ -41,7 +40,7 @@ namespace seamcarve {
     * Removes rows then columns, though in the actual paper
     * this ordering is mathematically calculated.
     */
-   QImage resize(QImage image, QSize size) {
+   QImage resize(const QImage image, QSize size) {
       QImage result   = image;
       int width_diff  = size.width() - image.width();
       int height_diff = size.height() - image.height();
@@ -57,7 +56,7 @@ namespace seamcarve {
       return result;
    }
 
-   QImage calculate_energy_image(QImage image) {
+   QImage calculate_energy_image(const QImage image) {
       int width           = image.width();
       int height          = image.height();
       int num_pixels      = width * height;
@@ -90,7 +89,7 @@ namespace seamcarve {
 
    /**********************PRIVATE***********************/
 
-   QImage remove_column(QImage image) {
+   QImage remove_column(const QImage image) {
       int width       = image.width();
       int height      = image.height();
       int num_pixels  = width * height;
@@ -151,7 +150,7 @@ namespace seamcarve {
    /*
     * TODO
     */
-   QImage remove_row(QImage image) {
+   QImage remove_row(const QImage image) {
       return image;
    }
 
@@ -160,7 +159,7 @@ namespace seamcarve {
     * a new image.  Assumes that the size of seam is the height/width
     * of the image and that it is sorted from lowest to highest pixel.
     */
-   QImage remove_seam(QImage image, int seam[], bool column) {
+   QImage remove_seam(const QImage image, int seam[], bool column) {
       // calculate new size of image
       QSize old_size = image.size();
       int seam_size  = column ? old_size.height() : old_size.width();
@@ -193,14 +192,14 @@ namespace seamcarve {
     *
     * Caller must free this energy array.
     */
-   float* calculate_energy(QImage image) {
+   float* calculate_energy(const QImage image) {
       int width = image.width();
       int height = image.height();
       float* energies = new float[width * height];
 
       for (int row = 0; row < height; row++) {
          for (int col = 0; col < width; col++) {
-            float energy = calculate_pixel_energy(col, row, image);
+            float energy = calculate_pixel_energy(image, col, row);
             energies[row * width + col] = energy;
          }
       }
@@ -211,24 +210,29 @@ namespace seamcarve {
    /*
     * Calculate pixel energy based on difference in neighboring RGB values.
     */
-   float calculate_pixel_energy(int x, int y, QImage image) {
-      QRgb pixel = image.pixel(x, y);
-      uint red   = qRed(pixel);
-      uint green = qGreen(pixel);
-      uint blue  = qBlue(pixel);
+   inline float calculate_pixel_energy(const QImage image, int x, int y) {
+      // IMPORTANT: image must be const or this will make a deep copy.
+      QRgb* pixels = (QRgb*) image.bits();
+
+      int width    = image.width();
+      int height   = image.height();
+      QRgb pixel   = pixels[y * width + x];
+      uint red     = qRed(pixel);
+      uint green   = qGreen(pixel);
+      uint blue    = qBlue(pixel);
 
       float energy = 0.0f;
       uint num_neighbors = 0;
       for (int i = x - 1; i <= x + 1; i++) {
          for (int j = y - 1; j <= y + 1; j++) {
             // neighboring pixel check
-            if (i < 0 || i >= image.width()) continue;
-            if (j < 0 || j >= image.height()) continue;
+            if (i < 0 || i >= width) continue;
+            if (j < 0 || j >= height) continue;
             if (i == x && j == y) continue;
 
             num_neighbors++;
 
-            QRgb rgb = image.pixel(i, j);
+            QRgb rgb = pixels[j * width + i];
             energy += abs(red - qRed(rgb))
                       + abs(green - qGreen(rgb))
                       + abs(blue - qBlue(rgb));
