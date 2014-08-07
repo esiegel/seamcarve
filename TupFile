@@ -27,6 +27,9 @@ FRAMEWORKS += -framework QtDeclarative
 FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
+# debug (-g)
+OTHER_FLAGS = -g
+
 ########################### RULES ###########################
 
 # QT5 ui compilation 
@@ -36,7 +39,7 @@ FRAMEWORKS += -framework QtWidgets
 : foreach include/ui/*.hpp |> $(QT5_HOME)/bin/moc -o %o %f |> build/generated/ui/%B.moc {gen_headers}
 
 # Compile object files
-: foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) -c %f -o %o |> build/objects/%B.o {objects}
+: foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) -c %f -o %o |> build/objects/%B.o {objects}
 
 # Seamcarve binary
-: {objects} |> $(CXX) -v $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
+: {objects} |> $(CXX) -v $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve

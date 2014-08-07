@@ -18,18 +18,20 @@ namespace seamcarve {
 
    float calculate_pixel_energy(int x, int y, QImage image);
 
-   QColor* calculate_pixel_colors(float* energies,
-                                  int num_pixels,
-                                  QColor start_color,
-                                  QColor end_color,
-                                  float min_energy,
-                                  float max_energy);
+   QColor* calculate_energy_colors(float* energies,
+                                   int num_pixels,
+                                   QColor start_color,
+                                   QColor end_color,
+                                   float min_energy,
+                                   float max_energy);
 
    QImage remove_column(QImage image);
 
    QImage remove_row(QImage image);
 
    QImage remove_seam(QImage image, int seam[], bool column);
+
+   void image_cleanup_handler(void *data);
 
    /**********************PUBLIC***********************/
 
@@ -69,8 +71,8 @@ namespace seamcarve {
       float min_energy = *min_element(energies, energies + num_pixels);
 
       // Set Colors
-      QColor* colors = calculate_pixel_colors(energies, num_pixels, start_color,
-                                              end_color, min_energy, max_energy);
+      QColor* colors = calculate_energy_colors(energies, num_pixels, start_color,
+                                               end_color, min_energy, max_energy);
 
       for (int row = 0; row < height; row++) {
          for (int col = 0; col < width; col++) {
@@ -180,8 +182,8 @@ namespace seamcarve {
          prev_pixel = seam_pixel;
       }
 
-      // new image
-      return QImage((uchar*)data, width, height, image.format());
+      // new image, also need to pass a cleanup function and a pnt to data.
+      return QImage((uchar*)data, width, height, image.format(), image_cleanup_handler, data);
    }
 
    /*
@@ -238,14 +240,14 @@ namespace seamcarve {
 
    /*
     * Chooses pixel color based on linear interpolation
-    * of energy.
+    * of start and end colors.
     */
-   QColor* calculate_pixel_colors(float* energies,
-                                  int num_pixels,
-                                  QColor start_color,
-                                  QColor end_color,
-                                  float min_energy,
-                                  float max_energy) {
+   QColor* calculate_energy_colors(float* energies,
+                                   int num_pixels,
+                                   QColor start_color,
+                                   QColor end_color,
+                                   float min_energy,
+                                   float max_energy) {
 
       QColor* colors = new QColor[num_pixels];
       int sred, sblue, sgreen;
@@ -266,5 +268,10 @@ namespace seamcarve {
       }
 
       return colors;
+   }
+
+   // deletes memory buffer from QImages
+   void image_cleanup_handler(void *data) {
+      delete ((QRgb*) data);
    }
 }
