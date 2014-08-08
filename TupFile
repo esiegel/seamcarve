@@ -30,6 +30,8 @@ FRAMEWORKS += -framework QtWidgets
 # debug (-g)
 OTHER_FLAGS = -g -O3
 
+LINKER_FLAGS = -Wl,-stack_size -Wl,0xf0000000
+
 ########################### RULES ###########################
 
 # QT5 ui compilation 
@@ -42,4 +44,4 @@ OTHER_FLAGS = -g -O3
 : foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) -c %f -o %o |> build/objects/%B.o {objects}
 
 # Seamcarve binary
-: {objects} |> $(CXX) -v $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
+: {objects} |> $(CXX) -v $(USE_C11) $(LINKER_FLAGS) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
