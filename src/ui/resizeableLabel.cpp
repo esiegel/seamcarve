@@ -80,13 +80,11 @@ namespace ui {
       imagePixmap = QPixmap(filename);
 
       // signal new image 
-      setPixmap(imagePixmap);
-
-      // signal new image 
       emit signal_image_opened(imagePixmap.size());
-   }
 
-   /**********************PRIVATE***********************/
+      // display pixmap after window has time to fully expand.
+      setPixmap(imagePixmap);
+   }
 
 }
 }
