@@ -28,7 +28,7 @@ FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
 # debug (-g)
-OTHER_FLAGS = -g -O3
+OTHER_FLAGS = -g -O0
 
 LINKER_FLAGS = ""
 
@@ -41,7 +41,7 @@ LINKER_FLAGS = ""
 : foreach include/ui/*.hpp |> $(QT5_HOME)/bin/moc -o %o %f |> build/generated/ui/%B.moc {gen_headers}
 
 # Compile object files
-: foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) -c %f -o %o |> build/objects/%B.o {objects}
+: foreach src/*.cpp src/ui/*.cpp | {gen_headers} |> ^c^ $(CXX) $(USE_C11) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) -c %f -o %o |> build/objects/%B.o {objects}
 
 # Seamcarve binary
-: {objects} |> $(CXX) -v $(USE_C11) $(LINKER_FLAGS) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
+: {objects} |> ^c^ $(CXX) -v $(USE_C11) $(LINKER_FLAGS) $(WARN_FLAGS) $(CPPPATH) $(OTHER_FLAGS) $(FRAMEWORK_PATH) $(LIBPATH) $(LIBS) $(FRAMEWORKS) %f -o %o|> build/seamcarve
