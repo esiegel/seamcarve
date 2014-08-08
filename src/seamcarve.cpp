@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <deque>
 #include <iostream>
+using std::cout;
+using std::endl;
 using std::max_element;
 using std::min_element;
 using std::min;
@@ -34,7 +36,7 @@ namespace seamcarve {
 
    float* calculate_energy(const QImage image);
 
-   float calculate_pixel_energy(const QImage image, int x, int y);
+   float calculate_energy(const QImage image, int x, int y);
 
    QColor* calculate_energy_colors(float* energies,
                                    int num_pixels,
@@ -61,11 +63,16 @@ namespace seamcarve {
       int width_diff = size.width() - image.width();
       int height_diff = size.height() - image.height();
 
+      //cout << "**image size " << image.width() << "x" << image.height() << endl;
+      //cout << "**new size " << size.width() << "x" << size.height() << endl;
+
       if (width_diff < 0) {
+         cout << "removing columns " << -width_diff << endl;
          result = remove_columns(result, -width_diff);
       }
 
       if (height_diff < 0) {
+         cout << "removing rows " << -height_diff << endl;
          result = remove_rows(result, -height_diff);
       }
 
@@ -135,14 +142,17 @@ namespace seamcarve {
       int width = image.width();
       int height = image.height();
       int num_pixels = width * height;
-      float* energies = calculate_energy(image); // Per pixel energy
-      float energy_diffs[num_pixels];            // tracks diffs in energy between pixel.
-      int prev_pixels[num_pixels];               // NxM pixels that point to prev with min energy.
-      deque<int> seam_pixels;                    // N pixels that are to remove
+
+      //Energy information.  Allocated on the heap due to large size.
+      float* energies = calculate_energy(image);   // Per pixel energy
+      float* energy_diffs = new float[num_pixels]; // tracks diffs in energy between pixel.
+      int* prev_pixels = new int[num_pixels];      // NxM pixels that point to prev with min energy.
+      deque<int> seam_pixels;                      // N pixels that are to remove
 
       QRgb* image_data = NULL;
       for (int i = 0; i < num; i++) {
          // calculate energies from previous energies.
+         //cout << "iteration " << i << endl;
          if (i > 0) {
             int num_pixels_pruned = num_pixels - height;
             float* energies_pruned = new float[num_pixels_pruned];
@@ -180,6 +190,8 @@ namespace seamcarve {
 
       // free memory
       delete energies;
+      delete energy_diffs;
+      delete prev_pixels;
 
       return QImage((uchar*) image_data,
                     width - num,
@@ -254,7 +266,7 @@ namespace seamcarve {
 
       for (int row = 0; row < height; row++) {
          for (int col = 0; col < width; col++) {
-            float energy = calculate_pixel_energy(image, col, row);
+            float energy = calculate_energy(image, col, row);
             energies[row * width + col] = energy;
          }
       }
@@ -265,16 +277,16 @@ namespace seamcarve {
    /*
     * Calculate pixel energy based on difference in neighboring RGB values.
     */
-   inline float calculate_pixel_energy(const QImage image, int x, int y) {
+   inline float calculate_energy(const QImage image, int x, int y) {
       // IMPORTANT: image must be const or this will make a deep copy.
       QRgb* pixels = (QRgb*) image.bits();
 
-      int width    = image.width();
-      int height   = image.height();
-      QRgb pixel   = pixels[y * width + x];
-      uint red     = qRed(pixel);
-      uint green   = qGreen(pixel);
-      uint blue    = qBlue(pixel);
+      int width  = image.width();
+      int height = image.height();
+      QRgb pixel = pixels[y * width + x];
+      uint red   = qRed(pixel);
+      uint green = qGreen(pixel);
+      uint blue  = qBlue(pixel);
 
       float energy = 0.0f;
       uint num_neighbors = 0;
@@ -335,22 +347,26 @@ namespace seamcarve {
     */
    template <typename T, typename S>
    void copy_and_prune_data(T* old_data, T* data, int old_data_size, S& indexes) {
-      int prev_index = 0;
-      for (int i = 0; i < indexes.size(); i++) {
-         int index = indexes[i];
-         int amount = index - prev_index;
+      int start = 0;
+      for (int index : indexes) {
+         // amount to copy
+         int amount = index - start;
 
-         memcpy(data + prev_index - i, old_data + prev_index, amount * sizeof(T)); 
+         // copy data
+         memcpy(data, old_data,  amount * sizeof(T)); 
 
-         prev_index = index;
+         // increment pointers to next start.
+         data += amount;
+         old_data += amount + 1;
+
+         start = index + 1;
       }
 
       // copy last chunk
-      memcpy(data + prev_index - indexes.size(), old_data + prev_index,
-            (old_data_size - prev_index) * sizeof(T)); 
+      memcpy(data, old_data, (old_data_size - start) * sizeof(T)); 
    }
 
-   // deletes memory buffer from QImages
+   // used a callback in QIMage to delete the memory buffer. 
    void image_cleanup_handler(void *data) {
       delete ((QRgb*) data);
    }
