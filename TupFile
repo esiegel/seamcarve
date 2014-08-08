@@ -28,7 +28,7 @@ FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
 # debug (-g)
-OTHER_FLAGS = -g
+OTHER_FLAGS = -g -O3
 
 ########################### RULES ###########################
 
