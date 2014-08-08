@@ -154,7 +154,7 @@ namespace seamcarve {
 
          copy_and_prune_data(old_image_data, image_data, num_pixels, seam_pixels);
 
-         if (get_old_image_data_from_original) {
+         if (!get_old_image_data_from_original) {
             delete old_image_data;
          }
       }
@@ -162,7 +162,12 @@ namespace seamcarve {
       // free memory
       delete energies;
 
-      return QImage((uchar*) image_data, width - num, height, image.format());
+      return QImage((uchar*) image_data,
+                    width - num,
+                    height,
+                    image.format(),
+                    image_cleanup_handler,
+                    image_data);
    }
 
    void calculate_energy_diff_by_col(int width,
