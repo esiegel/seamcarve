@@ -216,22 +216,20 @@ namespace seamcarve {
       for (int row = 1; row < height; row++) {
          for (int col = 0; col < width; col++) {
 
-            // keep track of minimum energy from previous row
-            float min_energy    = std::numeric_limits<float>::max();
-            int pixel           = row * width + col;
-            int prev_row_offset = pixel - height - col;
-
             // calculate the minimum energy from the previous row and record trail.
+            float min_energy = std::numeric_limits<float>::max();
             for (int prev_col = col - 1; prev_col <= col + 1; prev_col++) {
                if (prev_col < 0 || prev_col >= width) continue;
 
-               float prev_energy = energy_diffs[prev_row_offset + prev_col];
-               if (prev_energy < min_energy) {
-                  prev_pixels[row * width + col] = (row - 1) * width + prev_col;
+               int prev_pixel = (row - 1) * width + prev_col;
+               float prev_energy = energy_diffs[prev_pixel];
+               if (prev_energy <= min_energy) {
+                  prev_pixels[row * width + col] = prev_pixel;
                   min_energy = prev_energy;
                }
             }
 
+            int pixel = row * width + col;
             energy_diffs[pixel] = energies[pixel] + min_energy;
          }
       }
