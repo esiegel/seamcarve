@@ -30,7 +30,7 @@ FRAMEWORKS += -framework QtWidgets
 # debug (-g)
 OTHER_FLAGS = -g -O3
 
-LINKER_FLAGS = -Wl,-stack_size -Wl,0xf0000000
+LINKER_FLAGS = ""
 
 ########################### RULES ###########################
 
