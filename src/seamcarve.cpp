@@ -1,5 +1,6 @@
 #include "seamcarve.hpp"
 
+#include <QtGui/QTransform>
 #include <algorithm>
 #include <deque>
 #include <iostream>
@@ -15,6 +16,8 @@ namespace seamcarve {
 
    /**********************DECLARATIONS***********************/
 
+   QImage remove_rows(const QImage image, int num);
+
    QImage remove_columns(const QImage image, int num);
 
    void calculate_energy_diff_by_col(int width,
@@ -28,8 +31,6 @@ namespace seamcarve {
                          deque<int>& seam_pixels,
                          float* energy_diffs,
                          int* prev_pixels);
-
-   QImage remove_row(const QImage image);
 
    float* calculate_energy(const QImage image);
 
@@ -58,9 +59,14 @@ namespace seamcarve {
    QImage resize(const QImage image, QSize size) {
       QImage result = image;
       int width_diff = size.width() - image.width();
+      int height_diff = size.height() - image.height();
 
       if (width_diff < 0) {
          result = remove_columns(result, -width_diff);
+      }
+
+      if (height_diff < 0) {
+         result = remove_rows(result, -height_diff);
       }
 
       return result;
@@ -98,6 +104,19 @@ namespace seamcarve {
    }
 
    /**********************PRIVATE***********************/
+
+   /*
+    * Remove row by removing columns of the transposed image.
+    * This approach is slower, but cleaner.
+    */
+   QImage remove_rows(const QImage image, int num) {
+      QTransform rotate_forward  = QTransform().rotate(90);
+      QTransform rotate_backward = QTransform().rotate(-90);
+
+      QImage rotated_image = remove_columns(image.transformed(rotate_forward), num);
+      return rotated_image.transformed(rotate_backward);
+   }
+
 
    /*
     * Calculate a new image by removing least energetic pixel seams.
@@ -219,13 +238,6 @@ namespace seamcarve {
          seam_pixels.push_front(min_pixel);
          min_pixel = prev_pixels[min_pixel];
       }
-   }
-
-   /*
-    * TODO
-    */
-   QImage remove_row(const QImage image) {
-      return image;
    }
 
    /*
