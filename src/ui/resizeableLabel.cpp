@@ -29,9 +29,18 @@ namespace ui {
 
 
       // resize using seamcarving
-      QImage next_image = seamcarve::resize(pixmap()->toImage(), size);
+      QImage next_image = seamcarve::resize(imagePixmap.toImage(), size);
       imagePixmap = QPixmap::fromImage(next_image);
-      setPixmap(imagePixmap);
+
+      if (show_energy) {
+         QImage energy_image = calculate_energy_image(next_image);
+         energyPixmap = QPixmap::fromImage(energy_image);
+         energy_pixmap_stale = false;
+      } else {
+         energy_pixmap_stale = true;
+      }
+
+      setPixmap(show_energy ? energyPixmap : imagePixmap);
 
       // send event to standard event handler.
       QLabel::resizeEvent(event);
@@ -42,7 +51,18 @@ namespace ui {
 
    void ResizeableLabel::energyCheckboxClicked(bool checked) {
       cout << "ENERGY " << (checked ? "ON" : "OFF") << endl;
+
+      show_energy = checked;
+
       if (!imagePixmap.isNull()) {
+
+         // update energy pixmap only when necessary
+         if (checked && energy_pixmap_stale) {
+            QImage energy_image = calculate_energy_image(imagePixmap.toImage());
+            energyPixmap        = QPixmap::fromImage(energy_image);
+            energy_pixmap_stale = false;
+         }
+
          setPixmap(checked ? energyPixmap : imagePixmap);
       }
    }
@@ -58,9 +78,6 @@ namespace ui {
 
    void ResizeableLabel::openImageFromFilename(QString filename) {
       imagePixmap = QPixmap(filename);
-
-      QImage energy_image = calculate_energy_image(imagePixmap.toImage());
-      energyPixmap = QPixmap::fromImage(energy_image);
 
       // signal new image 
       setPixmap(imagePixmap);

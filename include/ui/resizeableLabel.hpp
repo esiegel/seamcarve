@@ -27,6 +27,8 @@ namespace ui {
       void openImageFromFilename(QString filename);
 
    private:
+      bool energy_pixmap_stale = true;
+      bool show_energy = false;
       QPixmap imagePixmap;
       QPixmap energyPixmap;
    };
