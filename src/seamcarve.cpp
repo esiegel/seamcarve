@@ -63,16 +63,11 @@ namespace seamcarve {
       int width_diff = size.width() - image.width();
       int height_diff = size.height() - image.height();
 
-      //cout << "**image size " << image.width() << "x" << image.height() << endl;
-      //cout << "**new size " << size.width() << "x" << size.height() << endl;
-
       if (width_diff < 0) {
-         cout << "removing columns " << -width_diff << endl;
          result = remove_columns(result, -width_diff);
       }
 
       if (height_diff < 0) {
-         cout << "removing rows " << -height_diff << endl;
          result = remove_rows(result, -height_diff);
       }
 
@@ -151,8 +146,8 @@ namespace seamcarve {
 
       QRgb* image_data = NULL;
       for (int i = 0; i < num; i++) {
+
          // calculate energies from previous energies.
-         //cout << "iteration " << i << endl;
          if (i > 0) {
             int num_pixels_pruned = num_pixels - height;
             float* energies_pruned = new float[num_pixels_pruned];
@@ -275,7 +270,7 @@ namespace seamcarve {
    /*
     * Calculate pixel energy based on difference in neighboring RGB values.
     */
-   inline float calculate_energy(const QImage image, int x, int y) {
+   float calculate_energy(const QImage image, int x, int y) {
       // IMPORTANT: image must be const or this will make a deep copy.
       QRgb* pixels = (QRgb*) image.bits();
 
