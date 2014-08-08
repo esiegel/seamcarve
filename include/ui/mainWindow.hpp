@@ -14,11 +14,11 @@ namespace ui {
       Q_OBJECT
 
       signals:
-         void signalImageFromCmdline(QString filename);
+         void signal_image_from_cmdline(QString filename);
 
       public slots:
-         void displayAboutMessageBox();
-         void imageOpened(QSize size);
+         void display_about_message_box();
+         void image_opened(QSize size);
    };
 
 }

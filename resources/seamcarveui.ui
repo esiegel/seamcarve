@@ -86,10 +86,10 @@
    <extends>QLabel</extends>
    <header>ui/resizeableLabel.hpp</header>
    <slots>
-    <signal>signalImageOpened(QSize)</signal>
-    <slot>openImage()</slot>
-    <slot>openImageFromFilename(QString)</slot>
-    <slot>energyCheckboxClicked(bool)</slot>
+    <signal>signal_image_opened(QSize)</signal>
+    <slot>open_image()</slot>
+    <slot>open_image_from_filename(QString)</slot>
+    <slot>energy_checkbox_clicked(bool)</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -99,7 +99,7 @@
    <sender>actionAbout</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
-   <slot>displayAboutMessageBox()</slot>
+   <slot>display_about_message_box()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -115,7 +115,7 @@
    <sender>actionOpen</sender>
    <signal>triggered()</signal>
    <receiver>label</receiver>
-   <slot>openImage()</slot>
+   <slot>open_image()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -129,9 +129,9 @@
   </connection>
   <connection>
    <sender>label</sender>
-   <signal>signalImageOpened(QSize)</signal>
+   <signal>signal_image_opened(QSize)</signal>
    <receiver>MainWindow</receiver>
-   <slot>imageOpened(QSize)</slot>
+   <slot>image_opened(QSize)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>326</x>
@@ -145,9 +145,9 @@
   </connection>
   <connection>
    <sender>MainWindow</sender>
-   <signal>signalImageFromCmdline(QString)</signal>
+   <signal>signal_image_from_cmdline(QString)</signal>
    <receiver>label</receiver>
-   <slot>openImageFromFilename(QString)</slot>
+   <slot>open_image_from_filename(QString)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>326</x>
@@ -163,7 +163,7 @@
    <sender>checkBox</sender>
    <signal>clicked(bool)</signal>
    <receiver>label</receiver>
-   <slot>energyCheckboxClicked(bool)</slot>
+   <slot>energy_checkbox_clicked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>330</x>
@@ -177,8 +177,8 @@
   </connection>
  </connections>
  <slots>
-  <signal>signalImageFromCmdline(QString)</signal>
-  <slot>displayAboutMessageBox()</slot>
-  <slot>imageOpened(QSize)</slot>
+  <signal>signal_image_from_cmdline(QString)</signal>
+  <slot>display_about_message_box()</slot>
+  <slot>image_opened(QSize)</slot>
  </slots>
 </ui>

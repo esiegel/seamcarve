@@ -19,12 +19,12 @@ namespace ui {
       void resizeEvent(QResizeEvent* event) override;
 
    signals:
-      void signalImageOpened(QSize size);
+      void signal_image_opened(QSize size);
 
    public slots:
-      void energyCheckboxClicked(bool checked);
-      void openImage();
-      void openImageFromFilename(QString filename);
+      void energy_checkbox_clicked(bool checked);
+      void open_image();
+      void open_image_from_filename(QString filename);
 
    private:
       bool energy_pixmap_stale = true;

@@ -49,7 +49,7 @@ namespace ui {
 
    /**********************SLOTS***********************/
 
-   void ResizeableLabel::energyCheckboxClicked(bool checked) {
+   void ResizeableLabel::energy_checkbox_clicked(bool checked) {
       cout << "ENERGY " << (checked ? "ON" : "OFF") << endl;
 
       show_energy = checked;
@@ -67,23 +67,23 @@ namespace ui {
       }
    }
 
-   void ResizeableLabel::openImage() {
+   void ResizeableLabel::open_image() {
       QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                       QDir::homePath(),
                                                       tr("Images (*.png *.jpg)"));
       // set pixmap
       cout << "OPENING IMAGE " << filename.toStdString() << endl;
-      openImageFromFilename(filename);
+      open_image_from_filename(filename);
    }
 
-   void ResizeableLabel::openImageFromFilename(QString filename) {
+   void ResizeableLabel::open_image_from_filename(QString filename) {
       imagePixmap = QPixmap(filename);
 
       // signal new image 
       setPixmap(imagePixmap);
 
       // signal new image 
-      emit signalImageOpened(imagePixmap.size());
+      emit signal_image_opened(imagePixmap.size());
    }
 
    /**********************PRIVATE***********************/

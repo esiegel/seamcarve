@@ -171,10 +171,10 @@ namespace seamcarve {
    }
 
    void calculate_energy_diff_by_col(int width,
-                                         int height,
-                                         float* energies,
-                                         float* energy_diffs,
-                                         int* prev_pixels) {
+                                     int height,
+                                     float* energies,
+                                     float* energy_diffs,
+                                     int* prev_pixels) {
 
       // set first row of energy diffs to be just the energy of that row.
       for (int i = 0; i < width; i++) {

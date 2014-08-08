@@ -24,14 +24,14 @@ int main(int argc, char const* argv[]) {
    window->show();
 
    // Get cmdline config, to potentially set image.
-   boost::optional<Config> optConfig = create_config(argc, argv);
-   if (!optConfig) {
+   boost::optional<Config> opt_config = create_config(argc, argv);
+   if (!opt_config) {
       return 1;
    }
-   Config config = optConfig.get();
+   Config config = opt_config.get();
    QString filename = QString::fromStdString(config.image_path);
 
-   emit window->signalImageFromCmdline(filename);
+   emit window->signal_image_from_cmdline(filename);
 
    return app.exec();
 }
