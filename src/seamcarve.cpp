@@ -1,17 +1,17 @@
 #include "seamcarve.hpp"
+#include "utility.hpp"
 
 #include <QtGui/QTransform>
 #include <algorithm>
+   using std::max_element;
+   using std::min_element;
 #include <deque>
+   using std::deque;
 #include <iostream>
-using std::cout;
-using std::endl;
-using std::max_element;
-using std::min_element;
-using std::min;
-using std::pair;
-using std::deque;
-using std::vector;
+   using std::cout;
+   using std::endl;
+#include <vector>
+   using std::vector;
 
 
 namespace seamcarve {
@@ -34,21 +34,13 @@ namespace seamcarve {
                          float* energy_diffs,
                          int* prev_pixels);
 
-   float* calculate_energy(const QImage image);
+   float calculate_pixel_energy(PixelArgs& pargs);
 
-   float calculate_energy(const QImage image, int x, int y);
-
-   QColor* calculate_energy_colors(float* energies,
-                                   int num_pixels,
-                                   QColor start_color,
-                                   QColor end_color,
-                                   float min_energy,
-                                   float max_energy);
-
-   template <typename T, typename S>
-   void copy_and_prune_data(T* old_data, T* data, int old_data_size, S& indexes);
-
-   void image_cleanup_handler(void *data);
+   QColor calculate_energy_color(float energy,
+                                 float min_energy,
+                                 float max_energy,
+                                 QColor start_color,
+                                 QColor end_color);
 
    /**********************PUBLIC***********************/
 
@@ -75,31 +67,22 @@ namespace seamcarve {
    }
 
    QImage calculate_energy_image(const QImage image) {
-      int width           = image.width();
-      int height          = image.height();
-      int num_pixels      = width * height;
-      QImage energy_image = QImage(width, height, image.format());
-      QColor start_color  = QColor("blue");
-      QColor end_color    = QColor("orange");
-
       // Calculate energies, min, and max
-      float* energies  = calculate_energy(image);
-      float max_energy = *max_element(energies, energies + num_pixels);
+      int num_pixels   = image.width() * image.height();
+      float* energies  = map(image, calculate_pixel_energy);
       float min_energy = *min_element(energies, energies + num_pixels);
+      float max_energy = *max_element(energies, energies + num_pixels);
 
-      // Set Colors
-      QColor* colors = calculate_energy_colors(energies, num_pixels, start_color,
-                                               end_color, min_energy, max_energy);
+      // Calculate Pixel colors
+      RGBfn transform = [energies, min_energy, max_energy](PixelArgs& pargs) {
+         float energy = energies[pargs.pixel_index];
+         return calculate_energy_color(energy, min_energy, max_energy,
+                                       QColor("blue"), QColor("orange")).rgb();
+      };
 
-      for (int row = 0; row < height; row++) {
-         for (int col = 0; col < width; col++) {
-            QRgb rgb = colors[row * width + col].rgb();
-            energy_image.setPixel(col, row, rgb);
-         }
-      }
+      QImage energy_image = img_map(image, transform);
 
       // free memory
-      delete colors;
       delete energies;
 
       return energy_image;
@@ -139,7 +122,7 @@ namespace seamcarve {
       int num_pixels = width * height;
 
       //Energy information.  Allocated on the heap due to large size.
-      float* energies = calculate_energy(image);   // Per pixel energy
+      float* energies = map(image, calculate_pixel_energy); // Per pixel energy
       float* energy_diffs = new float[num_pixels]; // tracks diffs in energy between pixel.
       int* prev_pixels = new int[num_pixels];      // NxM pixels that point to prev with min energy.
       deque<int> seam_pixels;                      // N pixels that are to remove
@@ -151,7 +134,7 @@ namespace seamcarve {
          if (i > 0) {
             int num_pixels_pruned = num_pixels - height;
             float* energies_pruned = new float[num_pixels_pruned];
-            copy_and_prune_data(energies, energies_pruned, num_pixels, seam_pixels);
+            copy_and_prune(energies, energies_pruned, num_pixels, seam_pixels);
             num_pixels = num_pixels_pruned;
 
             seam_pixels.clear();
@@ -176,7 +159,7 @@ namespace seamcarve {
 
          image_data = new QRgb[num_pixels - height];
 
-         copy_and_prune_data(old_image_data, image_data, num_pixels, seam_pixels);
+         copy_and_prune(old_image_data, image_data, num_pixels, seam_pixels);
 
          if (!get_old_image_data_from_original) {
             delete old_image_data;
@@ -202,14 +185,15 @@ namespace seamcarve {
                                      float* energy_diffs,
                                      int* prev_pixels) {
 
-      // set first row of energy diffs to be just the energy of that row.
-      for (int i = 0; i < width; i++) {
-         energy_diffs[i] = energies[i];
-      }
-
       // set each energy diff to the min of neighbor diffs.
-      for (int row = 1; row < height; row++) {
+      for (int row = 0; row < height; row++) {
          for (int col = 0; col < width; col++) {
+
+            // set first row of energy diffs to be just the energy of that row.
+            if (row == 0) {
+               energy_diffs[col] = energies[col];
+               continue;
+            }
 
             // calculate the minimum energy from the previous row and record trail.
             float min_energy = std::numeric_limits<float>::max();
@@ -233,66 +217,44 @@ namespace seamcarve {
    /*
     * Walks the NxM energy_diff grid to find the already calculated seam.
     */
-   void find_seam_by_col(int width, int height, deque<int>& seam_pixels, float* energy_diffs, int* prev_pixels) {
-      // working from the last row down to the first find the seam of min values.
-      float* min_diff = min_element(energy_diffs + (height - 1) * width,
-                                    energy_diffs + height * width);
+   void find_seam_by_col(int width, int height, deque<int>& seam_pixels,
+                         float* energy_diffs, int* prev_pixels) {
+
+      // find min energy in last row.
+      int last_row_offset   = (height - 1) * width;
+      float* min_energy_ptr = min_element(energy_diffs + last_row_offset,
+                                          energy_diffs + height * width);
+
       // set seam pixels
-      int min_pixel = min_diff - energy_diffs;
+      int pixel_index = min_energy_ptr - energy_diffs;
       for (int row = height - 1; row >= 0; row--) {
-         seam_pixels.push_front(min_pixel);
-         min_pixel = prev_pixels[min_pixel];
+         seam_pixels.push_front(pixel_index);
+         pixel_index = prev_pixels[pixel_index];
       }
    }
 
    /*
-    * Calculate the energy of all pixels returning a 1-dimensional
-    * array of size row*col.
-    * The ordering is row major, which means (0r,0c), (0r,1c)...(Nr,Mc)
-    *
-    * Caller must free this energy array.
+    * Calculate pixel energy based on difference
+    * in neighboring RGB values.
     */
-   float* calculate_energy(const QImage image) {
-      int width = image.width();
-      int height = image.height();
-      float* energies = new float[width * height];
-
-      for (int row = 0; row < height; row++) {
-         for (int col = 0; col < width; col++) {
-            float energy = calculate_energy(image, col, row);
-            energies[row * width + col] = energy;
-         }
-      }
-
-      return energies;
-   }
-
-   /*
-    * Calculate pixel energy based on difference in neighboring RGB values.
-    */
-   float calculate_energy(const QImage image, int x, int y) {
-      // IMPORTANT: image must be const or this will make a deep copy.
-      QRgb* pixels = (QRgb*) image.bits();
-
-      int width  = image.width();
-      int height = image.height();
-      QRgb pixel = pixels[y * width + x];
+   float calculate_pixel_energy(PixelArgs& pargs) {
+      QRgb pixel = pargs.pixels[pargs.pixel_index];
       uint red   = qRed(pixel);
       uint green = qGreen(pixel);
       uint blue  = qBlue(pixel);
 
       float energy = 0.0f;
       uint num_neighbors = 0;
-      for (int i = x - 1; i <= x + 1; i++) {
-         for (int j = y - 1; j <= y + 1; j++) {
+      for (int i = pargs.x - 1; i <= pargs.x + 1; i++) {
+         for (int j = pargs.y - 1; j <= pargs.y + 1; j++) {
             // neighboring pixel check
-            if (i < 0 || i >= width) continue;
-            if (j < 0 || j >= height) continue;
-            if (i == x && j == y) continue;
+            if (i < 0 || i >= pargs.width) continue;
+            if (j < 0 || j >= pargs.height) continue;
+            if (i == pargs.x && j ==pargs.y) continue;
 
             num_neighbors++;
 
-            QRgb rgb = pixels[j * width + i];
+            QRgb rgb = pargs.pixels[j * pargs.width + i];
             energy += abs(red - qRed(rgb))
                       + abs(green - qGreen(rgb))
                       + abs(blue - qBlue(rgb));
@@ -306,61 +268,22 @@ namespace seamcarve {
     * Chooses pixel color based on linear interpolation
     * of start and end colors.
     */
-   QColor* calculate_energy_colors(float* energies,
-                                   int num_pixels,
-                                   QColor start_color,
-                                   QColor end_color,
-                                   float min_energy,
-                                   float max_energy) {
-
-      QColor* colors = new QColor[num_pixels];
+   QColor calculate_energy_color(float energy,
+                                 float min_energy,
+                                 float max_energy,
+                                 QColor start_color,
+                                 QColor end_color) {
       int sred, sblue, sgreen;
       int ered, eblue, egreen;
-      float energy_range = max_energy - min_energy;
-
       start_color.getRgb(&sred, &sgreen, &sblue);
       end_color.getRgb(&ered, &egreen, &eblue);
 
-      for (int i = 0; i < num_pixels; i++) {
-         float energy = energies[i];
-         float percent = (energy - min_energy) / energy_range;
+      float energy_range = max_energy - min_energy;
+      float percent = (energy - min_energy) / energy_range;
 
-         int red   = sred   + ((ered - sred) * percent);
-         int green = sgreen + ((egreen - sgreen) * percent);
-         int blue  = sblue  + ((eblue - sblue) * percent);
-         colors[i] = QColor(red, green, blue);
-      }
-
-      return colors;
-   }
-
-   /*
-    * Copies old_data to data, but ignores values at index offets.
-    * Assumes that the indexes are sorted.
-    */
-   template <typename T, typename S>
-   void copy_and_prune_data(T* old_data, T* data, int old_data_size, S& indexes) {
-      int start = 0;
-      for (int index : indexes) {
-         // amount to copy
-         int amount = index - start;
-
-         // copy data
-         memcpy(data, old_data,  amount * sizeof(T)); 
-
-         // increment pointers to next start.
-         data += amount;
-         old_data += amount + 1;
-
-         start = index + 1;
-      }
-
-      // copy last chunk
-      memcpy(data, old_data, (old_data_size - start) * sizeof(T)); 
-   }
-
-   // used a callback in QIMage to delete the memory buffer. 
-   void image_cleanup_handler(void *data) {
-      delete ((QRgb*) data);
+      int red   = sred   + ((ered - sred) * percent);
+      int green = sgreen + ((egreen - sgreen) * percent);
+      int blue  = sblue  + ((eblue - sblue) * percent);
+      return QColor(red, green, blue);
    }
 }
