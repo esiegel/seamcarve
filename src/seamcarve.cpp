@@ -12,9 +12,6 @@
    using std::function;
    using std::placeholders::_1;
    using std::placeholders::_2;
-#include <iostream>
-   using std::cout;
-   using std::endl;
 #include <utility>
    using std::pair;
 #include <vector>

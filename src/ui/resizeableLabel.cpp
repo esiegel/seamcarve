@@ -7,11 +7,6 @@
 #include <QtGui/QResizeEvent>
 #include <QtWidgets/QFileDialog>
 
-#include <iostream>
-using std::cout;
-using std::endl;
-using std::string;
-
 
 namespace seamcarve {
 namespace ui {
@@ -21,15 +16,8 @@ namespace ui {
          return QLabel::resizeEvent(event);
       }
 
-      QSize oldSize = event->oldSize();
-      QSize size    = event->size();
-      cout << "Old Size:"  << oldSize.width() << "x" << oldSize.height()
-           << " New Size:" << size.width()    << "x" << size.height()
-           << " PIXMAP:" << pixmap()->size().width() << "x" << pixmap()->size().height() << endl;
-
-
       // resize using seamcarving
-      QImage next_image = seamcarve::resize(imagePixmap.toImage(), size);
+      QImage next_image = seamcarve::resize(imagePixmap.toImage(), event->size());
       imagePixmap = QPixmap::fromImage(next_image);
 
       if (show_energy) {
@@ -50,8 +38,6 @@ namespace ui {
    /**********************SLOTS***********************/
 
    void ResizeableLabel::energy_checkbox_clicked(bool checked) {
-      cout << "ENERGY " << (checked ? "ON" : "OFF") << endl;
-
       show_energy = checked;
 
       if (!imagePixmap.isNull()) {
@@ -72,7 +58,6 @@ namespace ui {
                                                       QDir::homePath(),
                                                       tr("Images (*.png *.jpg)"));
       // set pixmap
-      cout << "OPENING IMAGE " << filename.toStdString() << endl;
       open_image_from_filename(filename);
    }
 
