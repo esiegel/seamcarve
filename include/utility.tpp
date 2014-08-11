@@ -1,3 +1,6 @@
+#ifndef UTILITY_TPP
+#define UTILITY_TPP
+
 #include <functional>
 #include "utility.hpp"
 
@@ -123,3 +126,5 @@ namespace seamcarve {
    }
 
 }
+
+#endif
