@@ -7,42 +7,41 @@
    using std::min_element;
 #include <deque>
    using std::deque;
+#include <functional>
+   using std::bind;
+   using std::function;
+   using std::placeholders::_1;
+   using std::placeholders::_2;
 #include <iostream>
    using std::cout;
    using std::endl;
+#include <utility>
+   using std::pair;
 #include <vector>
    using std::vector;
 
 
 namespace seamcarve {
 
-   /**********************DECLARATIONS***********************/
+   /**********************INTERNAL DECLARATIONS***********************/
 
    QImage remove_rows(const QImage image, int num);
 
    QImage remove_columns(const QImage image, int num);
 
-   void calculate_energy_diff_by_col(int width,
-                                         int height,
-                                         float* energies,
-                                         float* energy_diffs,
-                                         int* prev_pixels);
+   Stitch calculate_stitch(PixelArgs& pargs, Stitch* stitches, float* energies);
 
-   void find_seam_by_col(int width,
-                         int height,
-                         deque<int>& seam_pixels,
-                         float* energy_diffs,
-                         int* prev_pixels);
+   deque<int> find_column_seam(Stitch* stitches, int width, int height);
 
    float calculate_pixel_energy(PixelArgs& pargs);
 
-   QColor calculate_energy_color(float energy,
-                                 float min_energy,
-                                 float max_energy,
-                                 QColor start_color,
-                                 QColor end_color);
+   QColor calculate_color(float energy,
+                          float min_energy,
+                          float max_energy,
+                          QColor start_color,
+                          QColor end_color);
 
-   /**********************PUBLIC***********************/
+   /**********************DEFINITIONS***********************/
 
    /*
     * Using the seamcarve algorithm resize the image.
@@ -76,11 +75,11 @@ namespace seamcarve {
       // Calculate Pixel colors
       RGBfn transform = [energies, min_energy, max_energy](PixelArgs& pargs) {
          float energy = energies[pargs.pixel_index];
-         return calculate_energy_color(energy, min_energy, max_energy,
-                                       QColor("blue"), QColor("orange")).rgb();
+         return calculate_color(energy, min_energy, max_energy,
+                                QColor("blue"), QColor("orange")).rgb();
       };
 
-      QImage energy_image = img_map(image, transform);
+      QImage energy_image = create_img(image, transform);
 
       // free memory
       delete energies;
@@ -88,7 +87,7 @@ namespace seamcarve {
       return energy_image;
    }
 
-   /**********************PRIVATE***********************/
+   /**********************INTERNAL DEFINITIONS***********************/
 
    /*
     * Remove row by removing columns of the transposed image.
@@ -122,54 +121,43 @@ namespace seamcarve {
       int num_pixels = width * height;
 
       //Energy information.  Allocated on the heap due to large size.
-      float* energies = map(image, calculate_pixel_energy); // Per pixel energy
-      float* energy_diffs = new float[num_pixels]; // tracks diffs in energy between pixel.
-      int* prev_pixels = new int[num_pixels];      // NxM pixels that point to prev with min energy.
-      deque<int> seam_pixels;                      // N pixels that are to remove
+      float* energies  = map(image, calculate_pixel_energy); // Per pixel energy
+      Stitch* stitches = new Stitch[num_pixels];             // tracks energy differences and is used to find seams.
+      QRgb* image_data = (QRgb*) image.bits();
+      deque<int> seam;
 
-      QRgb* image_data = NULL;
       for (int i = 0; i < num; i++) {
+         // create an image used for iteration.  We can't simply use the image above as it is also const.
+         // removing the constness, we would incur a copy.
+         const QImage prev_image = QImage((uchar*) image_data, width - i, height, image.format());
 
-         // calculate energies from previous energies.
+         // calculate energies from previous energies instead of recalculating.
+         // Profiling showed that calculating energy was a bottleneck.
          if (i > 0) {
-            int num_pixels_pruned = num_pixels - height;
-            float* energies_pruned = new float[num_pixels_pruned];
-            copy_and_prune(energies, energies_pruned, num_pixels, seam_pixels);
-            num_pixels = num_pixels_pruned;
-
-            seam_pixels.clear();
+            float* energies_pruned = prune(energies, seam, num_pixels + seam.size());
             delete energies;
-
             energies = energies_pruned;
          }
 
-         // calculates energy_diffs and tracks prev min pixels as well.
-         // would prefer to separate the prev_pixel calculation, but it
-         // saves much work to calculate together.
-         calculate_energy_diff_by_col(width - i, height, energies, energy_diffs, prev_pixels);
+         // calculates stitches using an progrressive, in-place map.
+         function<Stitch(PixelArgs&,Stitch*)> stitch_partial = bind(calculate_stitch, _1, _2, energies);
+         pimap(prev_image, stitches, stitch_partial);
 
          // traverse the grid of prev_pixels and find the seam.
-         find_seam_by_col(width - i, height, seam_pixels, energy_diffs, prev_pixels);
+         seam = find_column_seam(stitches, width - i, height);
 
-         // remove old pixel values specified in the seam.
-         bool get_old_image_data_from_original = image_data == NULL;
-         QRgb* old_image_data = (get_old_image_data_from_original) 
-                                ? (QRgb*) image.bits()
-                                : image_data;
+         // actually remove seam pixels
+         QRgb* prev_image_data = (QRgb*) prev_image.bits();
+         image_data = prune(prev_image_data, seam, num_pixels);
+         num_pixels = num_pixels - seam.size();
 
-         image_data = new QRgb[num_pixels - height];
-
-         copy_and_prune(old_image_data, image_data, num_pixels, seam_pixels);
-
-         if (!get_old_image_data_from_original) {
-            delete old_image_data;
-         }
+         // only delete image data that was copied from the origial image.
+         if (i > 0) delete prev_image_data;
       }
 
       // free memory
       delete energies;
-      delete energy_diffs;
-      delete prev_pixels;
+      delete stitches;
 
       return QImage((uchar*) image_data,
                     width - num,
@@ -179,58 +167,54 @@ namespace seamcarve {
                     image_data);
    }
 
-   void calculate_energy_diff_by_col(int width,
-                                     int height,
-                                     float* energies,
-                                     float* energy_diffs,
-                                     int* prev_pixels) {
+   /*
+    * Determine energy of the current pixel based on stitch energy
+    * from the row above.
+    */
+   Stitch calculate_stitch(PixelArgs& pargs, Stitch* stitches, float* energies) {
 
-      // set each energy diff to the min of neighbor diffs.
-      for (int row = 0; row < height; row++) {
-         for (int col = 0; col < width; col++) {
+      float energy = energies[pargs.pixel_index];
 
-            // set first row of energy diffs to be just the energy of that row.
-            if (row == 0) {
-               energy_diffs[col] = energies[col];
-               continue;
-            }
+      // first row of diff should just be energy of pixel.
+      if (pargs.y == 0) { return Stitch(energy, -1); }
 
-            // calculate the minimum energy from the previous row and record trail.
-            float min_energy = std::numeric_limits<float>::max();
-            for (int prev_col = col - 1; prev_col <= col + 1; prev_col++) {
-               if (prev_col < 0 || prev_col >= width) continue;
+      // calculate the minimum energy from the previous row and record trail.
+      Stitch stitch = Stitch(std::numeric_limits<float>::max());
+      for (int prev_col = pargs.x - 1; prev_col <= pargs.x + 1; prev_col++) {
+         if (prev_col < 0 || prev_col >= pargs.width) continue;
 
-               int prev_pixel = (row - 1) * width + prev_col;
-               float prev_energy = energy_diffs[prev_pixel];
-               if (prev_energy <= min_energy) {
-                  prev_pixels[row * width + col] = prev_pixel;
-                  min_energy = prev_energy;
-               }
-            }
+         int prev_pixel_index = (pargs.y - 1) * pargs.width + prev_col;
 
-            int pixel = row * width + col;
-            energy_diffs[pixel] = energies[pixel] + min_energy;
+         Stitch& prev_stitch = stitches[prev_pixel_index];
+         if (prev_stitch.energy <= stitch.energy) {
+            stitch.prev_pixel_index = prev_pixel_index;
+            stitch.energy = prev_stitch.energy;
          }
       }
+
+      stitch.energy += energy;
+      return stitch;
    }
 
    /*
     * Walks the NxM energy_diff grid to find the already calculated seam.
     */
-   void find_seam_by_col(int width, int height, deque<int>& seam_pixels,
-                         float* energy_diffs, int* prev_pixels) {
-
+   deque<int> find_column_seam(Stitch* stitches, int width, int height) {
       // find min energy in last row.
-      int last_row_offset   = (height - 1) * width;
-      float* min_energy_ptr = min_element(energy_diffs + last_row_offset,
-                                          energy_diffs + height * width);
+      int last_row_offset    = (height - 1) * width;
+      Stitch* min_stitch_ptr = min_element(stitches + last_row_offset,
+                                           stitches + height * width,
+                                           [](Stitch s1, Stitch s2) {return s1.energy < s2.energy;});
+      deque<int> seam;
 
       // set seam pixels
-      int pixel_index = min_energy_ptr - energy_diffs;
+      int pixel_index = min_stitch_ptr - stitches;
       for (int row = height - 1; row >= 0; row--) {
-         seam_pixels.push_front(pixel_index);
-         pixel_index = prev_pixels[pixel_index];
+         seam.push_front(pixel_index);
+         pixel_index = stitches[pixel_index].prev_pixel_index;
       }
+
+      return seam;
    }
 
    /*
@@ -268,11 +252,11 @@ namespace seamcarve {
     * Chooses pixel color based on linear interpolation
     * of start and end colors.
     */
-   QColor calculate_energy_color(float energy,
-                                 float min_energy,
-                                 float max_energy,
-                                 QColor start_color,
-                                 QColor end_color) {
+   QColor calculate_color(float energy,
+                          float min_energy,
+                          float max_energy,
+                          QColor start_color,
+                          QColor end_color) {
       int sred, sblue, sgreen;
       int ered, eblue, egreen;
       start_color.getRgb(&sred, &sgreen, &sblue);
