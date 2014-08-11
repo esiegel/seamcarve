@@ -128,7 +128,7 @@ namespace seamcarve {
 
       for (int i = 0; i < num; i++) {
          // create an image used for iteration.  We can't simply use the image above as it is also const.
-         // removing the constness, we would incur a copy.
+         // removing the constness, we would incur a copy, when we access the underlying bits.
          const QImage prev_image = QImage((uchar*) image_data, width - i, height, image.format());
 
          // calculate energies from previous energies instead of recalculating.
@@ -139,9 +139,9 @@ namespace seamcarve {
             energies = energies_pruned;
          }
 
-         // calculates stitches using an progrressive, in-place map.
-         function<Stitch(PixelArgs&,Stitch*)> stitch_partial = bind(calculate_stitch, _1, _2, energies);
-         pimap(prev_image, stitches, stitch_partial);
+         // calculates stitches using an progressive, in-place map.
+         StitchPartial fn = bind(calculate_stitch, _1, _2, energies);
+         pimap(prev_image, stitches, fn);
 
          // traverse the grid of prev_pixels and find the seam.
          seam = find_column_seam(stitches, width - i, height);
@@ -159,12 +159,8 @@ namespace seamcarve {
       delete energies;
       delete stitches;
 
-      return QImage((uchar*) image_data,
-                    width - num,
-                    height,
-                    image.format(),
-                    image_cleanup_handler,
-                    image_data);
+      return QImage((uchar*) image_data, width - num, height,
+                    image.format(), image_cleanup_handler, image_data);
    }
 
    /*

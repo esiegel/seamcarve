@@ -52,7 +52,7 @@ namespace seamcarve {
 
    // Useful types for more easily declaring lambdas as functions. Good for map, imap.
    typedef function<QRgb(PixelArgs&)> RGBfn;
-   typedef function<float(PixelArgs&)> Floatfn;
+   typedef function<Stitch(PixelArgs&,Stitch*)> StitchPartial;
 
    /* Helper templates that allow iterating over the pixel data and returning new data.
     * Think of this like map in scala or python, just restricted to iterating over images.
