@@ -27,8 +27,9 @@ FRAMEWORKS += -framework QtDeclarative
 FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
-# debug (-g)
-OTHER_FLAGS = -g -O0
+# debug (-g), optimization level (-03)
+# OTHER_FLAGS = -g -O0
+OTHER_FLAGS = -O3
 
 LINKER_FLAGS = ""
 

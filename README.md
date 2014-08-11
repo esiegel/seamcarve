@@ -19,7 +19,7 @@ build/seamcarve [-i PATH_TO_IMG]
 
 ## BUILDING
 
-Originally, I had chosen cmake as the build tool, but I found it's magic not well suited for actually understanding the build process.  Eventually I chose [tup][tup].  Tup is extremely good at managing a depdendency tree and knowing exactly which rules need reprocessing.  This makes incremental builds extremely easy, and make compiling more tolerable.  Tup uses a FUSE file system to monitor changes in files while usually helpful, can complicate things.
+Originally, I had chosen cmake as the build tool, but I found it's magic not well suited for actually understanding the build process.  Eventually I chose [tup][tup].  Tup is extremely good at managing a dependency tree and knowing exactly which rules need reprocessing.  This makes incremental builds extremely easy, and makes compiling more tolerable.  Tup uses a FUSE file system to monitor changes to files.  This indirection, while usually helpful, can complicate things.
 
 #### Installing tup on osx
 
@@ -29,7 +29,7 @@ chmod u+s $(which tup)
 chown root $(which tup)
 ```
 
-The last two lines are necessary in order to allow tup the ability to create chroot directories.  Refer to this [issue][tup_issue] about adding debug symbols to the compiled source.
+The last two lines are necessary in order to allow tup the ability to create chroot directories.  Refer to this [issue][tup_issue], which explains how chroot is used as a workaround to compiling with debug symbols.
 
 #### Other dependencies
 
@@ -58,7 +58,7 @@ Looking at the TupFile you'll notice that I avoided the typical Qt workflow.  In
 
 [cpp]: http://en.cppreference.com/w/cpp
 [cair]: http://sourceforge.net/projects/c-a-i-r/
-[demo]: http://i.imgur.com/Xr6T0OH.gif
+[demo]: http://i.imgur.com/hLsWMKQ.gif
 [esiegel_utility]: https://github.com/esiegel/seamcarve/blob/master/include/utility.hpp#L72-81
 [qt5]: http://qt-project.org/doc/qt-5/index.html
 [seam_wiki]: http://en.wikipedia.org/wiki/Seam_carving
