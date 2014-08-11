@@ -5,6 +5,18 @@ This is an implementation of [seam carving][seam_wiki], described in this [paper
 
 This is by no means the goto implementation; for that you should use the [cair library][cair].  For me, seam carving was alluring because it is relatively straight forward and also visually really cool.  Most importantly, it served as a platform for learning C++, Qt, and tup, all of which are things that I had zero experience with before this project.
 
+## Running
+
+After seamcarve is compiled, you can run the executable as follows:
+
+```bash
+build/seamcarve [-i PATH_TO_IMG]
+```
+
+## DEMO
+
+![][demo]
+
 ## BUILDING
 
 Originally, I had chosen cmake as the build tool, but I found it's magic not well suited for actually understanding the build process.  Eventually I chose [tup][tup].  Tup is extremely good at managing a depdendency tree and knowing exactly which rules need reprocessing.  This makes incremental builds extremely easy, and make compiling more tolerable.  Tup uses a FUSE file system to monitor changes in files while usually helpful, can complicate things.
@@ -42,18 +54,11 @@ Looking at the TupFile you'll notice that I avoided the typical Qt workflow.  In
   * uic - compiles Qt UI files into cpp headers.  This header defines the gui layout.
   * moc - a meta compiler that transforms source with Qt's special syntax into implementation.  Used for slots and signals.
   * clang++ - a compiler with, among other things, awesome error messages.  Very useful when using templated code.  If you like, you can gcc without a problem.
-  
-#### Running
-
-The executable can be run with or without specifying the image you want to resize.  The GUI can open new files.
-
-```bash
-build/seamcarve [-i PATH_TO_IMG]
-```
 
 
 [cpp]: http://en.cppreference.com/w/cpp
 [cair]: http://sourceforge.net/projects/c-a-i-r/
+[demo]: http://i.imgur.com/Xr6T0OH.gif
 [esiegel_utility]: https://github.com/esiegel/seamcarve/blob/master/include/utility.hpp#L72-81
 [qt5]: http://qt-project.org/doc/qt-5/index.html
 [seam_wiki]: http://en.wikipedia.org/wiki/Seam_carving
@@ -61,4 +66,3 @@ build/seamcarve [-i PATH_TO_IMG]
 [seam_video]: https://www.youtube.com/watch?v=vIFCV2spKtg
 [tup]: http://gittup.org/tup/
 [tup_issue]: https://github.com/gittup/tup/issues/195
-
