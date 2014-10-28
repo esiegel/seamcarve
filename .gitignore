@@ -4,3 +4,4 @@ build
 seamcarve.*
 */**.o
 .tup/*
+*.jpg
