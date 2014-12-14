@@ -2,7 +2,7 @@
 
 CXX = /usr/bin/clang++
 
-QT5_HOME = /usr/local/Cellar/qt5/5.3.1
+QT5_HOME = /usr/local/Cellar/qt5/5.4.0
 
 CPPPATH  = -Iinclude
 CPPPATH += -I$(QT5_HOME)/include
