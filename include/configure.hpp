@@ -2,6 +2,7 @@
 #define CONFIGURE_HPP
 
 #include <boost/optional.hpp>
+#include <iostream>
 
 namespace seamcarve {
 
