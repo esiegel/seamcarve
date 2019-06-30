@@ -3,8 +3,10 @@
 
 #include <QtGui/QTransform>
 #include <algorithm>
-   using std::max_element;
+   using std::minmax_element;
    using std::min_element;
+#include <cmath>
+   using std::fabs;
 #include <deque>
    using std::deque;
 #include <functional>
@@ -64,10 +66,11 @@ namespace seamcarve {
 
    QImage calculate_energy_image(const QImage image) {
       // Calculate energies, min, and max
-      int num_pixels   = image.width() * image.height();
-      float* energies  = map(image, calculate_pixel_energy);
-      float min_energy = *min_element(energies, energies + num_pixels);
-      float max_energy = *max_element(energies, energies + num_pixels);
+      int num_pixels     = image.width() * image.height();
+      float* energies    = map(image, calculate_pixel_energy);
+      auto minmax_energy = minmax_element(energies, energies + num_pixels);
+      float min_energy   = *minmax_energy.first;
+      float max_energy   = *minmax_energy.second;
 
       // Calculate Pixel colors
       RGBfn transform = [energies, min_energy, max_energy](PixelArgs& pargs) {
@@ -154,7 +157,7 @@ namespace seamcarve {
 
       // free memory
       delete energies;
-      delete stitches;
+      delete[] stitches;
 
       return QImage((uchar*) image_data, width - num, height,
                     image.format(), image_cleanup_handler, image_data);
@@ -232,9 +235,9 @@ namespace seamcarve {
             num_neighbors++;
 
             QRgb rgb = pargs.pixels[j * pargs.width + i];
-            energy += abs(red - qRed(rgb))
-                      + abs(green - qGreen(rgb))
-                      + abs(blue - qBlue(rgb));
+            energy += fabs(red - qRed(rgb))
+                      + fabs(green - qGreen(rgb))
+                      + fabs(blue - qBlue(rgb));
          }
       }
 

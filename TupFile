@@ -2,11 +2,11 @@
 
 CXX = /usr/bin/clang++
 
-QT5_HOME = /usr/local/Cellar/qt5/5.4.0
+QT5_HOME = /usr/local/Cellar/qt5/5.9.1
 
 CPPPATH  = -Iinclude
 CPPPATH += -I$(QT5_HOME)/include
-CPPPATH += -I/usr/local/Cellar/boost/1.53.0/include
+CPPPATH += -I/usr/local/Cellar/boost/1.69.0_2/include
 CPPPATH += -I/usr/local/include
 CPPPATH += -Ibuild/generated
 
@@ -16,14 +16,13 @@ WARN_FLAGS  = -Wall
 WARN_FLAGS += -Wc++11-extensions
 
 LIBPATH  = -L/usr/local/lib
-LIBPATH += -L/usr/local/Cellar/boost/1.53.0/lib
+LIBPATH += -L/usr/local/Cellar/boost/1.69.0_2/lib
 
 LIBS = -lboost_program_options-mt
 
 FRAMEWORK_PATH = -F$(QT5_HOME)/lib
 
 FRAMEWORKS  = -framework QtCore
-FRAMEWORKS += -framework QtDeclarative
 FRAMEWORKS += -framework QtGui
 FRAMEWORKS += -framework QtWidgets
 
@@ -31,7 +30,8 @@ FRAMEWORKS += -framework QtWidgets
 # OTHER_FLAGS = -g -O0
 OTHER_FLAGS = -O3
 
-LINKER_FLAGS = ""
+# LINKER_FLAGS = ""
+LINKER_FLAGS = "-lprofiler"
 
 ########################### RULES ###########################
 
