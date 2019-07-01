@@ -5,6 +5,8 @@
 #include <algorithm>
    using std::minmax_element;
    using std::min_element;
+   using std::min;
+   using std::max;
 #include <cmath>
    using std::fabs;
 #include <deque>
@@ -19,7 +21,6 @@
 #include <vector>
    using std::vector;
 
-
 namespace seamcarve {
 
    /**********************INTERNAL DECLARATIONS***********************/
@@ -28,9 +29,9 @@ namespace seamcarve {
 
    QImage remove_columns(const QImage image, int num);
 
-   Stitch calculate_stitch(PixelArgs& pargs, Stitch* stitches, float* energies);
+   float* calculate_min_energies(const QImage image, float* energies);
 
-   deque<int> find_column_seam(Stitch* stitches, int width, int height);
+   deque<int> find_column_seam(float* energies, int width, int height);
 
    float calculate_pixel_energy(PixelArgs& pargs);
 
@@ -121,9 +122,8 @@ namespace seamcarve {
       int num_pixels = width * height;
 
       //Energy information.  Allocated on the heap due to large size.
-      float* energies  = map(image, calculate_pixel_energy); // Per pixel energy
-      Stitch* stitches = new Stitch[num_pixels];             // tracks energy differences and is used to find seams.
-      QRgb* image_data = (QRgb*) image.bits();
+      float* energies    = map(image, calculate_pixel_energy); // Per pixel energy
+      QRgb* image_data   = (QRgb*) image.bits();
       deque<int> seam;
 
       for (int i = 0; i < num; i++) {
@@ -139,12 +139,12 @@ namespace seamcarve {
             energies = energies_pruned;
          }
 
-         // calculates stitches using an progressive, in-place map.
-         StitchPartial fn = bind(calculate_stitch, _1, _2, energies);
-         pimap(prev_image, stitches, fn);
+         float* min_energies = calculate_min_energies(prev_image, energies);
 
          // traverse the grid of prev_pixels and find the seam.
-         seam = find_column_seam(stitches, width - i, height);
+         seam = find_column_seam(min_energies, width - i, height);
+
+         delete[] min_energies;
 
          // actually remove seam pixels
          QRgb* prev_image_data = (QRgb*) prev_image.bits();
@@ -157,57 +157,85 @@ namespace seamcarve {
 
       // free memory
       delete energies;
-      delete[] stitches;
 
       return QImage((uchar*) image_data, width - num, height,
                     image.format(), image_cleanup_handler, image_data);
    }
 
    /*
-    * Determine energy of the current pixel based on stitch energy
-    * from the row above.
+    * Determine min energy of the current pixel based on looking at previous neighbor pixels
     */
-   Stitch calculate_stitch(PixelArgs& pargs, Stitch* stitches, float* energies) {
+   float* calculate_min_energies(const QImage image, float* energies) {
+      int width      = image.width();
+      int height     = image.height();
+      int num_pixels = width * height;
 
-      float energy = energies[pargs.pixel_index];
+      // results
+      float* min_energies = new float[num_pixels];
 
-      // first row of diff should just be energy of pixel.
-      if (pargs.y == 0) { return Stitch(energy, -1); }
+      for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
+          int pixel_index = (row * width) + col;
 
-      // calculate the minimum energy from the previous row and record trail.
-      Stitch stitch = Stitch(std::numeric_limits<float>::max());
-      for (int prev_col = pargs.x - 1; prev_col <= pargs.x + 1; prev_col++) {
-         if (prev_col < 0 || prev_col >= pargs.width) continue;
+          // first row of diff should just be energy of pixel.
+          if (row == 0) {
+            min_energies[pixel_index] = energies[pixel_index];
+            continue;
+          }
 
-         int prev_pixel_index = (pargs.y - 1) * pargs.width + prev_col;
+          float min_prev_energy = std::numeric_limits<float>::max();
+          for (int prev_col = col - 1; prev_col <= col + 1; prev_col++) {
+             if (prev_col < 0 || prev_col >= width) continue;
 
-         Stitch& prev_stitch = stitches[prev_pixel_index];
-         if (prev_stitch.energy <= stitch.energy) {
-            stitch.prev_pixel_index = prev_pixel_index;
-            stitch.energy = prev_stitch.energy;
-         }
+             int prev_pixel_index = (row - 1) * width + prev_col;
+             int prev_energy      = energies[prev_pixel_index];
+
+             if (prev_energy <= min_prev_energy) {
+                min_prev_energy = prev_energy;
+             }
+          }
+
+          min_energies[pixel_index] = energies[pixel_index] + min_prev_energy;
+        }
       }
 
-      stitch.energy += energy;
-      return stitch;
+      return min_energies;
    }
 
    /*
     * Walks the NxM energy_diff grid to find the already calculated seam.
     */
-   deque<int> find_column_seam(Stitch* stitches, int width, int height) {
-      // find min energy in last row.
-      int last_row_offset    = (height - 1) * width;
-      Stitch* min_stitch_ptr = min_element(stitches + last_row_offset,
-                                           stitches + height * width,
-                                           [](Stitch s1, Stitch s2) {return s1.energy < s2.energy;});
+   deque<int> find_column_seam(float* min_energies, int width, int height) {
       deque<int> seam;
 
-      // set seam pixels
-      int pixel_index = min_stitch_ptr - stitches;
-      for (int row = height - 1; row >= 0; row--) {
-         seam.push_front(pixel_index);
-         pixel_index = stitches[pixel_index].prev_pixel_index;
+      int min_col = 0;
+
+      for (int row = (height - 1); row >= 0; row--)  {
+        int col;
+        int col_high;
+
+        // for the last row we need to search all columns, for others just neighbors
+        if (row == height - 1) {
+          col      = 0;
+          col_high = width - 1;
+        } else {
+          col      = max(0, min_col - 1);
+          col_high = min(width - 1, min_col + 1);
+        }
+
+        int min_col_energy = std::numeric_limits<float>::max();
+
+        for (; col <= col_high; col++) {
+          int index = (width * row) + col;
+          float energy = min_energies[index];
+
+          if (energy < min_col_energy) {
+            min_col_energy = energy;
+            min_col = col;
+          }
+        }
+
+        seam.push_front((width * row) + min_col);
       }
 
       return seam;

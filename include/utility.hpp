@@ -7,21 +7,6 @@
 
 namespace seamcarve {
 
-   /**
-    * Represents a pixel chain.
-    *
-    * A prev_pixel_index < 0 means, there is no previous.
-    */
-   struct Stitch {
-      Stitch() : energy(0), prev_pixel_index(-1) {};
-      Stitch(const Stitch& s) : energy(s.energy), prev_pixel_index(s.prev_pixel_index) {};
-      Stitch(float e) : energy(e), prev_pixel_index(-1) {};
-      Stitch(float e, int ppi) : energy(e), prev_pixel_index(ppi) {};
-
-      float energy;
-      int prev_pixel_index;
-   };
-
    /*
     * Data per pixel that is passed during image
     * mapping transformations.
@@ -52,7 +37,6 @@ namespace seamcarve {
 
    // Useful types for more easily declaring lambdas as functions. Good for map, imap.
    typedef function<QRgb(PixelArgs&)> RGBfn;
-   typedef function<Stitch(PixelArgs&,Stitch*)> StitchPartial;
 
    /* Helper templates that allow iterating over the pixel data and returning new data.
     * Think of this like map in scala or python, just restricted to iterating over images.
