@@ -30,8 +30,8 @@ FRAMEWORKS += -framework QtWidgets
 # OTHER_FLAGS = -g -O0
 OTHER_FLAGS = -O3
 
-# LINKER_FLAGS = ""
-LINKER_FLAGS = "-lprofiler"
+LINKER_FLAGS = ""
+# LINKER_FLAGS = "-lprofiler"
 
 ########################### RULES ###########################
 

@@ -21,6 +21,8 @@
 #include <vector>
    using std::vector;
 
+#include <iostream>
+
 namespace seamcarve {
 
    /**********************INTERNAL DECLARATIONS***********************/
@@ -117,48 +119,36 @@ namespace seamcarve {
     *   Eng + Seam -> Eng_small -> Eng_diff_small -> Seam_small
     */
    QImage remove_columns(const QImage image, int num) {
-      int width = image.width();
-      int height = image.height();
-      int num_pixels = width * height;
-
-      //Energy information.  Allocated on the heap due to large size.
-      float* energies    = map(image, calculate_pixel_energy); // Per pixel energy
-      QRgb* image_data   = (QRgb*) image.bits();
+      QRgb* image_data = (QRgb*) image.bits();
       deque<int> seam;
 
       for (int i = 0; i < num; i++) {
+         int width      = image.width() - i;
+         int height     = image.height();
+         int num_pixels = width * height;
+
          // create an image used for iteration.  We can't simply use the image above as it is also const.
          // removing the constness, we would incur a copy, when we access the underlying bits.
-         const QImage prev_image = QImage((uchar*) image_data, width - i, height, image.format());
-
-         // calculate energies from previous energies instead of recalculating.
-         // Profiling showed that calculating energy was a bottleneck.
-         if (i > 0) {
-            float* energies_pruned = prune(energies, seam, num_pixels + seam.size());
-            delete energies;
-            energies = energies_pruned;
-         }
-
-         float* min_energies = calculate_min_energies(prev_image, energies);
+         const QImage prev_image = QImage((uchar*) image_data, width, height, image.format());
+         float* energies         = map(image, calculate_pixel_energy); // Per pixel energy
+         float* min_energies     = calculate_min_energies(prev_image, energies);
 
          // traverse the grid of prev_pixels and find the seam.
-         seam = find_column_seam(min_energies, width - i, height);
-
-         delete[] min_energies;
+         seam = find_column_seam(min_energies, width, height);
 
          // actually remove seam pixels
          QRgb* prev_image_data = (QRgb*) prev_image.bits();
-         image_data = prune(prev_image_data, seam, num_pixels);
-         num_pixels = num_pixels - seam.size();
+         image_data            = prune(prev_image_data, seam, num_pixels);
 
          // only delete image data that was copied from the origial image.
          if (i > 0) delete prev_image_data;
+
+         // free memory
+         delete[] min_energies;
+         delete energies;
       }
 
-      // free memory
-      delete energies;
-
-      return QImage((uchar*) image_data, width - num, height,
+      return QImage((uchar*) image_data, image.width() - num, image.height(),
                     image.format(), image_cleanup_handler, image_data);
    }
 
