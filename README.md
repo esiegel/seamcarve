@@ -58,7 +58,7 @@ Looking at the TupFile you'll notice that I avoided the typical Qt workflow.  In
 
 [cpp]: http://en.cppreference.com/w/cpp
 [cair]: http://sourceforge.net/projects/c-a-i-r/
-[demo]: http://i.imgur.com/hLsWMKQ.gif
+[demo]: ../media/demo.gif?raw=true
 [esiegel_utility]: https://github.com/esiegel/seamcarve/blob/master/include/utility.hpp#L72-81
 [qt5]: http://qt-project.org/doc/qt-5/index.html
 [seam_wiki]: http://en.wikipedia.org/wiki/Seam_carving
